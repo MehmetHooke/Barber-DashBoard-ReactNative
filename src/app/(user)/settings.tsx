@@ -11,9 +11,9 @@ import { logout } from "@/src/services/auth.service";
 import { getUserDoc } from "@/src/services/user.service";
 import type { UserDoc } from "@/src/types/user";
 
+import Card from "@/src/components/Card";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
-import { shadowMd } from "@/src/theme/shadows";
 
 type ThemePreference = "system" | "light" | "dark";
 
@@ -27,26 +27,7 @@ function SectionTitle({ title, color }: { title: string; color: string }) {
   );
 }
 
-function Card({
-  children,
-  bg,
-  border,
-  shadowColor,
-}: {
-  children: React.ReactNode;
-  bg: string;
-  border: string;
-  shadowColor: string;
-}) {
-  return (
-    <View
-      className="rounded-2xl border overflow-hidden"
-      style={[{ backgroundColor: bg, borderColor: border }, shadowMd(shadowColor)]}
-    >
-      {children}
-    </View>
-  );
-}
+
 
 function Divider({ color, insetLeft = 16 }: { color: string; insetLeft?: number }) {
   return <View style={{ height: 1, marginLeft: insetLeft, backgroundColor: color }} />;

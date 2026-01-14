@@ -25,6 +25,8 @@ export const colors = {
     // shadow
     shadowColor: "#000000",
 
+    //red button bg
+
     // ✅ accent (dark = mor)
     accent: "#7C3AED",
     accentSoft: "rgba(124,58,237,0.14)",
