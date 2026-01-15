@@ -54,7 +54,11 @@ function UserTabBar({ state, descriptors, navigation }: any) {
   const bottom = Math.max(insets.bottom, Platform.OS === "android" ? 10 : 0);
 
   return (
-    <View style={{ paddingBottom: bottom, paddingTop: 12, paddingHorizontal: 14, backgroundColor: c.tabWrapBg }}>
+    <View style={{ paddingBottom: bottom,
+     paddingTop: 12, 
+     paddingHorizontal: 14, 
+     backgroundColor: c.tabWrapBg 
+     }}>
       <View
         style={{
           height: 64,

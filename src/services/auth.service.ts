@@ -1,10 +1,11 @@
 import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
 } from "firebase/auth";
 import { auth } from "../lib/firebase";
-import { createUserDoc } from "./user.service";
+import { ensureBarberDoc } from "./barbers.service";
+import { createUserDoc, getUserDoc } from "./user.service";
 
 export async function registerWithEmail(params: {
   name: string;
@@ -30,7 +31,7 @@ export async function registerWithEmail(params: {
     name: name.trim(),
     surname: surname.trim(),
     phone: phone.trim(),
-    role: "USER",//herkes user şimdilik bu yetkiyi uygulamaya sahip olan işletmelerin oturumlarına db üzerinden verilecek.
+    role: "USER", //herkes user şimdilik bu yetkiyi uygulamaya sahip olan işletmelerin oturumlarına db üzerinden verilecek.
     createdAt: Date.now(),
   });
 
@@ -43,6 +44,24 @@ export async function loginWithEmail(email: string, password: string) {
     email.trim(),
     password.trim()
   );
+
+  const uid = cred.user.uid;
+
+  // users/{uid} rolünü oku
+  const userDoc = await getUserDoc(uid);
+
+  // berber ise barbers/{uid} yoksa oluştur
+  if (userDoc?.role === "BARBER") {
+    const fullName =
+      `${userDoc.name ?? ""} ${userDoc.surname ?? ""}`.trim() || "Berber";
+    await ensureBarberDoc({
+      uid,
+      shopId: "main",
+      name: fullName,
+      imageUrl: "",
+    });
+  }
+
   return cred.user;
 }
 
