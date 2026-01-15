@@ -50,7 +50,7 @@ export default function BookStackLayout() {
         name="confirm"
         options={{
           title: "Onayla",
-          presentation: "modal", // istersen modal gibi açılır
+           // istersen modal gibi açılır
         }}
       />
     </Stack>

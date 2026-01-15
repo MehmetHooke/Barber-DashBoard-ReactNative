@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 
 import { Text } from "@/components/ui/text";
 import Card from "@/src/components/Card";
@@ -8,34 +8,20 @@ import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
 
 import { auth } from "@/src/lib/firebase";
-import {
-  checkBarberAvailability,
-  createAppointment,
-} from "@/src/services/appointmentService";
+import { checkBarberAvailability, createAppointment } from "@/src/services/appointmentService";
+import { getBarberById } from "@/src/services/barbers.service";
+import { getServiceById, type ServiceDoc } from "@/src/services/services.service";
 
-type Service = {
-  id: string;
-  name: string;
-  description: string;
-  imageUrl?: string;
-  durationMin: number;
-  price: number;
-};
-
-type Barber = {
+type BarberDocLite = {
   id: string;
   name: string;
   imageUrl?: string;
+  shopId?: string;
 };
 
 function formatDateTimeTR(d: Date) {
-  // 16 Ocak Çarşamba • 14:30
-  const months = [
-    "Ocak","Şubat","Mart","Nisan","Mayıs","Haziran",
-    "Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık",
-  ];
+  const months = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   const days = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
-
   const day = d.getDate();
   const month = months[d.getMonth()];
   const dow = days[d.getDay()];
@@ -64,47 +50,57 @@ export default function Confirm() {
   const startAt = startAtISO ? new Date(startAtISO) : null;
   const endAt = endAtISO ? new Date(endAtISO) : null;
 
-  // ✅ şimdilik mock lookup (sonra Firestore’dan çekeceğiz)
-  const service: Service | undefined = useMemo(() => {
-    const list: Service[] = [
-      {
-        id: "svc_haircut",
-        name: "Saç Kesimi",
-        description: "Kişiye özel kesim, şekillendirme ve son dokunuşlar.",
-        durationMin: 30,
-        price: 350,
-      },
-      {
-        id: "svc_beard",
-        name: "Sakal Tıraşı",
-        description: "Hat düzeltme, sakal şekillendirme, bakım uygulaması.",
-        durationMin: 20,
-        price: 250,
-      },
-      {
-        id: "svc_combo",
-        name: "Saç + Sakal",
-        description: "Komple bakım: saç kesimi + sakal tıraşı birlikte.",
-        durationMin: 50,
-        price: 550,
-      },
-    ];
-    return list.find((x) => x.id === serviceId);
-  }, [serviceId]);
-
-  const barber: Barber | undefined = useMemo(() => {
-    const list: Barber[] = [
-      { id: "barber_1", name: "Ahmet" },
-      { id: "barber_2", name: "Mert" },
-      { id: "barber_3", name: "Emre" },
-    ];
-    return list.find((x) => x.id === barberId);
-  }, [barberId]);
+  const [service, setService] = useState<ServiceDoc | null>(null);
+  const [barber, setBarber] = useState<BarberDocLite | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [saving, setSaving] = useState(false);
 
-  const invalid =
-    !serviceId || !barberId || !startAt || !endAt || !service || !barber;
+  // ✅ Firestore’dan service + barber çek
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+
+        if (!serviceId || !barberId) {
+          setService(null);
+          setBarber(null);
+          return;
+        }
+
+        const [svc, brb] = await Promise.all([
+          getServiceById(serviceId),
+          getBarberById(barberId),
+        ]);
+
+        setService(svc);
+
+        // getBarberById senin serviste BarberDoc döndürüyor olabilir
+        // burada minimal shape’e çeviriyoruz:
+        setBarber(
+          brb
+            ? {
+                id: barberId,
+                name: (brb as any).name ?? "Berber",
+                imageUrl: (brb as any).imageUrl ?? "",
+                shopId: (brb as any).shopId ?? "main",
+              }
+            : null
+        );
+      } catch (e: any) {
+        Alert.alert("Hata", "Randevu bilgileri yüklenemedi.");
+        setService(null);
+        setBarber(null);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [serviceId, barberId]);
+
+  // ✅ Valid kontrol: id’ler + time + doc’lar
+  const invalid = useMemo(() => {
+    return !serviceId || !barberId || !startAt || !endAt || !service || !barber;
+  }, [serviceId, barberId, startAt, endAt, service, barber]);
 
   async function onConfirm() {
     if (invalid) {
@@ -122,7 +118,7 @@ export default function Confirm() {
     try {
       setSaving(true);
 
-      const shopId = "main";
+      const shopId = barber?.shopId ?? "main";
 
       // ✅ Son saniye kontrolü
       const ok = await checkBarberAvailability({
@@ -133,20 +129,17 @@ export default function Confirm() {
       });
 
       if (!ok.available) {
-        Alert.alert(
-          "Dolu saat",
-          "Seçtiğin saat dolmuş. Lütfen başka bir saat seç."
-        );
+        Alert.alert("Dolu saat", "Seçtiğin saat dolmuş. Lütfen başka bir saat seç.");
         router.back();
         return;
       }
 
-      // ✅ Oluştur
       await createAppointment({
         shopId,
         userId: uid,
         barberId: barberId!,
         serviceId: serviceId!,
+
         serviceSnapshot: {
           name: service!.name,
           description: service!.description,
@@ -154,10 +147,12 @@ export default function Confirm() {
           price: service!.price,
           imageUrl: service!.imageUrl,
         },
+
         barberSnapshot: {
           name: barber!.name,
           imageUrl: barber!.imageUrl,
         },
+
         startAt: startAt!,
         endAt: endAt!,
         status: "PENDING",
@@ -178,6 +173,17 @@ export default function Confirm() {
     } finally {
       setSaving(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: c.screenBg }}>
+        <ActivityIndicator />
+        <Text className="mt-2" style={{ color: c.textMuted }}>
+          Bilgiler yükleniyor...
+        </Text>
+      </View>
+    );
   }
 
   return (
@@ -207,9 +213,11 @@ export default function Confirm() {
               <Text className="text-base font-bold mt-1" style={{ color: c.text }}>
                 {service?.name ?? "—"}
               </Text>
-              <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
-                {service ? `${service.durationMin} dk • ${service.price} ₺` : ""}
-              </Text>
+              {service ? (
+                <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
+                  {service.durationMin} dk • {service.price} ₺
+                </Text>
+              ) : null}
             </View>
 
             <View className="mt-4">
@@ -239,18 +247,14 @@ export default function Confirm() {
               BİLGİ
             </Text>
             <Text className="text-sm mt-2" style={{ color: c.textMuted }}>
-              Randevun oluşturulduktan sonra durum “Beklemede” olarak görünebilir.
-              Berber onayladığında “Onaylandı” olur.
+              Randevun oluşturulduktan sonra durum “Beklemede” olarak görünebilir. Berber onayladığında “Onaylandı” olur.
             </Text>
           </View>
         </Card>
 
         {/* Actions */}
         <View className="gap-3 mt-1">
-          <Pressable
-            disabled={saving || invalid}
-            onPress={onConfirm}
-          >
+          <Pressable disabled={saving || invalid} onPress={onConfirm}>
             <View
               className="rounded-2xl py-4 items-center justify-center border"
               style={{
@@ -265,7 +269,7 @@ export default function Confirm() {
             </View>
           </Pressable>
 
-          <Pressable disabled={saving} onPress={() => router.back()}>
+          <Pressable disabled={saving} onPress={() => router.replace("/(user)/book")}>
             <View
               className="rounded-2xl py-4 items-center justify-center border"
               style={{
