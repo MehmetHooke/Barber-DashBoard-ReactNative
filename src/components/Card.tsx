@@ -14,7 +14,7 @@ export default function Card({
 }) {
   return (
     <View
-      className="rounded-2xl border overflow-hidden"
+      className="rounded-2xl border  border-outline-200 overflow-hidden"
       style={[{ backgroundColor: bg, borderColor: border }, shadowMd(shadowColor)]}
     >
       {children}

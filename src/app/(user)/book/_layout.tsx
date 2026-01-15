@@ -1,16 +1,33 @@
+import { colors } from "@/src/theme/colors";
+import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { Stack } from "expo-router";
 import React from "react";
 
 export default function BookStackLayout() {
+    const { effectiveTheme } = useAppTheme();
+  const c = colors[effectiveTheme];
   return (
     <Stack
       screenOptions={{
         headerShown: true,
         headerTitleAlign: "center",
+
+        // 🔥 tema uyumlu header
+        headerStyle: {
+          backgroundColor: c.screenBg,
+        },
+
+        headerTintColor: c.text, // başlık + back icon
+        headerTitleStyle: {
+          fontWeight: "700",
+        },
+
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: "#000" },
-        headerTintColor: "#fff",
-        contentStyle: { backgroundColor: "#000" },
+
+        // ekranın geri kalan arka planı
+        contentStyle: {
+          backgroundColor: c.screenBg,
+        },
       }}
     >
       {/* /book */}
