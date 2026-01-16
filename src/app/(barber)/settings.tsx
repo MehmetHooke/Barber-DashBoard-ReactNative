@@ -11,6 +11,7 @@ import { logout } from "@/src/services/auth.service";
 import { getUserDoc } from "@/src/services/user.service";
 import type { UserDoc } from "@/src/types/user";
 
+import { useAppAlert } from "@/src/components/AppAlertProvider";
 import Card from "@/src/components/Card";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
@@ -131,6 +132,7 @@ export default function BarberSettings() {
   const [profile, setProfile] = useState<UserDoc | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
+    const { confirm, alert } = useAppAlert();
 
   useEffect(() => {
     (async () => {
@@ -155,24 +157,24 @@ export default function BarberSettings() {
   }, [preference, theme]);
 
   async function onLogout() {
-    Alert.alert("Çıkış Yap", "Hesabından çıkmak istiyor musun?", [
-      { text: "İptal", style: "cancel" },
-      {
-        text: "Çıkış Yap",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            setLogoutLoading(true);
-            await logout();
-            router.replace("/(auth)/login");
-          } catch {
-            Alert.alert("Hata", "Çıkış yapılamadı.");
-          } finally {
-            setLogoutLoading(false);
-          }
-        },
+    confirm({
+      title: "Çıkış Yap",
+      message: "Hesabından çıkmak istiyor musun?",
+      cancelText: "İptal",
+      confirmText: "Çıkış Yap",
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          setLogoutLoading(true);
+          await logout();
+          router.replace("/(auth)/login");
+        } catch {
+          alert("Hata", "Çıkış yapılamadı.");
+        } finally {
+          setLogoutLoading(false);
+        }
       },
-    ]);
+    });
   }
 
   return (
