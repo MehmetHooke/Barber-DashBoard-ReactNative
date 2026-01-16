@@ -1,20 +1,20 @@
 // services/appointmentService.ts
-import type { AppointmentStatus } from "@/src/lib/appointments";
 import { db } from "@/src/lib/firebase"; // sende nerede ise
+import type { AppointmentStatus } from "@/src/types/appointments";
 import {
-    addDoc,
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    limit,
-    orderBy,
-    query,
-    serverTimestamp,
-    setDoc,
-    Timestamp,
-    updateDoc,
-    where,
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+  updateDoc,
+  where,
 } from "firebase/firestore";
 
 type ServiceSnapshot = {
