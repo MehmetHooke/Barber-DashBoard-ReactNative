@@ -7,7 +7,7 @@ import Card from "@/src/components/Card";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
 
-import UserHeroCarousel, { type HeroSlide } from "@/src/components/userHeroCarousel";
+import UserHeroCarousel, { type HeroSlide } from "@/src/components/UserHeroCarousel";
 import { getActiveServices, type ServiceDoc } from "@/src/services/services.service";
 
 export default function UserHome() {
@@ -68,7 +68,7 @@ export default function UserHome() {
           </View>
         ) : slides.length ? (
           <View className="mt-4">
-            <UserHeroCarousel slides={slides} autoMs={2500} height={140} />
+            <UserHeroCarousel slides={slides} height={240} />
           </View>
         ) : null}
 
