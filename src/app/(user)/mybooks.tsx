@@ -1,6 +1,13 @@
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 
 import { Text } from "@/components/ui/text";
 import Card from "@/src/components/Card";
@@ -8,9 +15,10 @@ import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
 
 import {
-    getPastAppointmentsForUser,
-    getUpcomingAppointmentForUser,
+  getPastAppointmentsForUser,
+  getUpcomingAppointmentForUser,
 } from "@/src/services/appointmentService";
+import { getAuth } from "firebase/auth";
 
 type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
 
@@ -20,7 +28,12 @@ type AppointmentItem = {
   userId: string;
   barberId: string;
   serviceId: string;
-  serviceSnapshot: { name: string; durationMin: number; price: number; imageUrl?: string };
+  serviceSnapshot: {
+    name: string;
+    durationMin: number;
+    price: number;
+    imageUrl?: string;
+  };
   barberSnapshot: { name: string; imageUrl?: string };
   startAt: Date;
   endAt: Date;
@@ -28,27 +41,25 @@ type AppointmentItem = {
 };
 
 function formatDateTR(d: Date) {
-  return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
+  return d.toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 }
 function formatTimeTR(d: Date) {
   return d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
 }
 
-function StatusBadge({
-  status,
-  c,
-}: {
-  status: AppointmentStatus;
-  c: any;
-}) {
+function StatusBadge({ status, c }: { status: AppointmentStatus; c: any }) {
   const label =
     status === "PENDING"
-      ? "Onay Bekliyor"
+      ? "Berberden Onay Bekliyor"
       : status === "CONFIRMED"
-      ? "Onaylı"
-      : status === "COMPLETED"
-      ? "Tamamlandı"
-      : "İptal";
+        ? "Onaylandı"
+        : status === "COMPLETED"
+          ? "Tamamlandı"
+          : "İptal";
 
   // basit ve tema uyumlu: border+text muted
   return (
@@ -117,7 +128,8 @@ export default function MyAppointmentsScreen() {
   const c = colors[effectiveTheme];
 
   // TODO: userId’yi auth context’inden al
-  const userId = "CURRENT_USER_ID";
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -130,6 +142,7 @@ export default function MyAppointmentsScreen() {
   async function load() {
     try {
       setLoading(true);
+      if (!userId) return;
       const [up, pa] = await Promise.all([
         getUpcomingAppointmentForUser({ userId }),
         getPastAppointmentsForUser({ userId, limitCount: 50 }),
@@ -144,6 +157,7 @@ export default function MyAppointmentsScreen() {
   async function onRefresh() {
     try {
       setRefreshing(true);
+      if (!userId) return;
       const [up, pa] = await Promise.all([
         getUpcomingAppointmentForUser({ userId }),
         getPastAppointmentsForUser({ userId, limitCount: 50 }),
@@ -156,6 +170,7 @@ export default function MyAppointmentsScreen() {
   }
 
   useEffect(() => {
+    if (!userId) return;
     load();
   }, []);
 
@@ -165,14 +180,20 @@ export default function MyAppointmentsScreen() {
   const upcomingContent = useMemo(() => {
     if (!upcoming) {
       return (
-        <View className="mt-2 rounded-2xl border p-4" style={{ borderColor: c.surfaceBorder }}>
+        <View
+          className="mt-2 rounded-2xl border p-4"
+          style={{ borderColor: c.surfaceBorder }}
+        >
           <Text className="text-sm" style={{ color: c.textMuted }}>
             Henüz yaklaşan randevun yok. Hizmet seçerek hemen oluşturabilirsin.
           </Text>
 
           <Pressable
             className="mt-3 self-start rounded-xl px-4 py-2 border"
-            style={{ borderColor: c.surfaceBorder, backgroundColor: c.screenBg }}
+            style={{
+              borderColor: c.surfaceBorder,
+              backgroundColor: c.screenBg,
+            }}
             onPress={() => router.push("/(user)")} // senin akışına göre: hizmet seçme sayfası
           >
             <Text className="text-sm font-semibold" style={{ color: c.text }}>
@@ -185,10 +206,7 @@ export default function MyAppointmentsScreen() {
 
     return (
       <View className="mt-3">
-        <AppointmentRow
-          item={upcoming}
-          c={c}
-        />
+        <AppointmentRow item={upcoming} c={c} />
       </View>
     );
   }, [upcoming, c]);
@@ -205,7 +223,18 @@ export default function MyAppointmentsScreen() {
         </Text>
       </View>
 
-      <View className="px-4 flex-1">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={c.textMuted}
+          />
+        }
+      >
         {loading ? (
           <View className="mt-8 items-center justify-center">
             <ActivityIndicator />
@@ -216,14 +245,18 @@ export default function MyAppointmentsScreen() {
         ) : (
           <View className="mt-4">
             {/* Yaklaşan (ÜSTTE) */}
-            <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+            <Card
+              bg={c.surfaceBg}
+              border={c.surfaceBorder}
+              shadowColor={c.shadowColor}
+            >
               <View className="p-4">
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-base font-semibold" style={{ color: c.text }}>
+                  <Text
+                    className="text-base font-semibold"
+                    style={{ color: c.text }}
+                  >
                     Yaklaşan Randevular
-                  </Text>
-                  <Text className="text-sm" style={{ color: c.textMuted }}>
-                    {upcoming ? "1" : "0"}
                   </Text>
                 </View>
                 {upcomingContent}
@@ -232,7 +265,11 @@ export default function MyAppointmentsScreen() {
 
             {/* Geçmiş (Accordion) */}
             <View className="mt-4">
-              <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+              <Card
+                bg={c.surfaceBg}
+                border={c.surfaceBorder}
+                shadowColor={c.shadowColor}
+              >
                 <View className="p-4">
                   <Pressable
                     onPress={() => setPastOpen((s) => !s)}
@@ -240,16 +277,22 @@ export default function MyAppointmentsScreen() {
                   >
                     <View className="flex-row items-center justify-between">
                       <View>
-                        <Text className="text-base font-semibold" style={{ color: c.text }}>
+                        <Text
+                          className="text-base font-semibold"
+                          style={{ color: c.text }}
+                        >
                           Geçmiş Randevularım
                         </Text>
-                        <Text className="text-sm mt-1" style={{ color: c.textMuted }}>
+                        <Text
+                          className="text-sm mt-1"
+                          style={{ color: c.textMuted }}
+                        >
                           Toplam {pastCount} kayıt
                         </Text>
                       </View>
 
                       <Text className="text-sm" style={{ color: c.textMuted }}>
-                        {pastOpen ? "Kapat ▲" : "Aç ▼"}
+                        {pastOpen ? "Kapat ▼" : "Aç ▲"}
                       </Text>
                     </View>
                   </Pressable>
@@ -261,7 +304,10 @@ export default function MyAppointmentsScreen() {
                           className="rounded-2xl border p-4"
                           style={{ borderColor: c.surfaceBorder }}
                         >
-                          <Text className="text-sm" style={{ color: c.textMuted }}>
+                          <Text
+                            className="text-sm"
+                            style={{ color: c.textMuted }}
+                          >
                             Henüz geçmiş randevun yok.
                           </Text>
                         </View>
@@ -269,12 +315,11 @@ export default function MyAppointmentsScreen() {
                         <FlatList
                           data={past}
                           keyExtractor={(x) => x.id}
-                          ItemSeparatorComponent={() => <View className="h-3" />}
+                          ItemSeparatorComponent={() => (
+                            <View className="h-3" />
+                          )}
                           renderItem={({ item }) => (
-                            <AppointmentRow
-                              item={item}
-                              c={c}
-                            />
+                            <AppointmentRow item={item} c={c} />
                           )}
                           scrollEnabled={false}
                           refreshing={refreshing}
@@ -299,7 +344,7 @@ export default function MyAppointmentsScreen() {
             <View className="h-8" />
           </View>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }

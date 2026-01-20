@@ -31,7 +31,7 @@ type BarberSnapshot = {
 };
 
 export type CreateAppointmentInput = {
-  shopId: string; 
+  shopId: string;
   userId: string;
   barberId: string;
   serviceId: string;
@@ -84,7 +84,7 @@ export async function checkBarberAvailability(args: {
     where("startAt", ">=", Timestamp.fromDate(dayStart)),
     where("startAt", "<=", Timestamp.fromDate(dayEnd)),
     orderBy("startAt", "asc"),
-    limit(250)
+    limit(250),
   );
 
   const snap = await getDocs(q);
@@ -148,22 +148,25 @@ export async function createAppointment(input: CreateAppointmentInput) {
   });
 
   // 3) Barber mirror
-  await setDoc(doc(db, "barbers", input.barberId, "appointments", appointmentId), {
-    appointmentId,
-    shopId: input.shopId,
-    userId: input.userId,
-    serviceId: input.serviceId,
+  await setDoc(
+    doc(db, "barbers", input.barberId, "appointments", appointmentId),
+    {
+      appointmentId,
+      shopId: input.shopId,
+      userId: input.userId,
+      serviceId: input.serviceId,
 
-    serviceSnapshot: input.serviceSnapshot,
-    barberSnapshot: input.barberSnapshot,
+      serviceSnapshot: input.serviceSnapshot,
+      barberSnapshot: input.barberSnapshot,
 
-    startAt: Timestamp.fromDate(input.startAt),
-    endAt: Timestamp.fromDate(input.endAt),
+      startAt: Timestamp.fromDate(input.startAt),
+      endAt: Timestamp.fromDate(input.endAt),
 
-    status,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
+      status,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+  );
 
   return { appointmentId };
 }
@@ -193,6 +196,32 @@ export async function getAppointmentById(appointmentId: string) {
 /**
  * Kullanıcının yaklaşan randevusu (en yakın 1 tane)
  */
+
+//test
+export async function debugAppointmentsForUser(userId: string) {
+  const q = query(
+    collection(db, "appointments"),
+    where("userId", "==", userId),
+    orderBy("startAt", "desc"),
+    limit(20),
+  );
+
+  const snap = await getDocs(q);
+  console.log("DEBUG appointments size:", snap.size);
+
+  return snap.docs.map((x) => {
+    const d = x.data() as any;
+    return {
+      id: x.id,
+      userId: d.userId,
+      status: d.status,
+      startAt: (d.startAt as Timestamp)?.toDate?.(),
+      rawStartAt: d.startAt,
+    };
+  });
+}
+//---------------
+
 export async function getUpcomingAppointmentForUser(args: {
   userId: string;
   now?: Date;
@@ -205,7 +234,7 @@ export async function getUpcomingAppointmentForUser(args: {
     where("status", "in", ["PENDING", "CONFIRMED"]),
     where("startAt", ">=", Timestamp.fromDate(now)),
     orderBy("startAt", "asc"),
-    limit(1)
+    limit(1),
   );
 
   const snap = await getDocs(q);
@@ -244,7 +273,7 @@ export async function getPastAppointmentsForUser(args: {
     where("userId", "==", args.userId),
     where("startAt", "<", Timestamp.fromDate(before)),
     orderBy("startAt", "desc"),
-    limit(limitCount)
+    limit(limitCount),
   );
 
   const snap = await getDocs(q);
@@ -270,11 +299,20 @@ export async function cancelAppointment(args: {
   userId: string;
   barberId: string;
 }) {
-  const payload = { status: "CANCELLED" as AppointmentStatus, updatedAt: serverTimestamp() };
+  const payload = {
+    status: "CANCELLED" as AppointmentStatus,
+    updatedAt: serverTimestamp(),
+  };
 
   await updateDoc(doc(db, "appointments", args.appointmentId), payload);
-  await updateDoc(doc(db, "users", args.userId, "appointments", args.appointmentId), payload);
-  await updateDoc(doc(db, "barbers", args.barberId, "appointments", args.appointmentId), payload);
+  await updateDoc(
+    doc(db, "users", args.userId, "appointments", args.appointmentId),
+    payload,
+  );
+  await updateDoc(
+    doc(db, "barbers", args.barberId, "appointments", args.appointmentId),
+    payload,
+  );
 }
 
 export async function rescheduleAppointment(args: {
@@ -303,8 +341,14 @@ export async function rescheduleAppointment(args: {
   };
 
   await updateDoc(doc(db, "appointments", args.appointmentId), payload);
-  await updateDoc(doc(db, "users", args.userId, "appointments", args.appointmentId), payload);
-  await updateDoc(doc(db, "barbers", args.barberId, "appointments", args.appointmentId), payload);
+  await updateDoc(
+    doc(db, "users", args.userId, "appointments", args.appointmentId),
+    payload,
+  );
+  await updateDoc(
+    doc(db, "barbers", args.barberId, "appointments", args.appointmentId),
+    payload,
+  );
 }
 
 /**
@@ -326,7 +370,7 @@ export async function getBarberAppointmentsForDay(args: {
     where("startAt", ">=", Timestamp.fromDate(dayStart)),
     where("startAt", "<=", Timestamp.fromDate(dayEnd)),
     orderBy("startAt", "asc"),
-    limit(250)
+    limit(250),
   );
 
   const snap = await getDocs(q);
