@@ -220,7 +220,7 @@ export default function UserHome() {
         subtitle: `${s.durationMin} dk • ${s.price} ₺`,
         badge: i === 0 ? "Popüler" : undefined,
         onPress: () =>
-          router.push({
+          router.replace({
             pathname: "/(user)/book/barber-detail",
             params: { serviceId: s.id },
           }),

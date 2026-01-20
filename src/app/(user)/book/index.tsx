@@ -19,7 +19,6 @@ import { colors } from "@/src/theme/colors";
  * - none -> show CTA -> /book/select-service
  */
 export default function BookIndex() {
-
   const { effectiveTheme } = useAppTheme();
   const c = colors[effectiveTheme];
   const router = useRouter();
@@ -28,8 +27,10 @@ export default function BookIndex() {
     barberId?: string;
   }>();
 
-  const serviceId = typeof params.serviceId === "string" ? params.serviceId : undefined;
-  const barberId = typeof params.barberId === "string" ? params.barberId : undefined;
+  const serviceId =
+    typeof params.serviceId === "string" ? params.serviceId : undefined;
+  const barberId =
+    typeof params.barberId === "string" ? params.barberId : undefined;
 
   useEffect(() => {
     // Tekrarla akışı: direkt tarih/saat
@@ -52,24 +53,15 @@ export default function BookIndex() {
   }, [serviceId, barberId, router]);
 
   // Eğer yönlendirme koşulu yoksa bu UI görünecek
- return (
-    <View
-      className="flex-1 px-4 pt-6"
-      style={{ backgroundColor: c.screenBg }}
-    >
+  return (
+    <View className="flex-1 px-4 pt-6" style={{ backgroundColor: c.screenBg }}>
       <VStack className="gap-4">
         {/* Header */}
         <VStack className="gap-1">
-          <Text
-            className="text-2xl font-bold"
-            style={{ color: c.text }}
-          >
+          <Text className="text-2xl font-bold" style={{ color: c.text }}>
             Randevu Al
           </Text>
-          <Text
-            className="text-sm"
-            style={{ color: c.textMuted }}
-          >
+          <Text className="text-sm" style={{ color: c.textMuted }}>
             Hizmet seç → Berber seç → Tarih & saat seç → Onayla
           </Text>
         </VStack>
@@ -89,12 +81,9 @@ export default function BookIndex() {
                 Başlayalım
               </Text>
 
-              <Text
-                className="text-sm"
-                style={{ color: c.textMuted }}
-              >
-                Uygun bir hizmet seçerek randevu oluşturabilirsin.
-                İstersen daha sonra berberi ve saati belirleyeceğiz.
+              <Text className="text-sm" style={{ color: c.textMuted }}>
+                Uygun bir hizmet seçerek randevu oluşturabilirsin. İstersen daha
+                sonra berberi ve saati belirleyeceğiz.
               </Text>
 
               <Button
@@ -106,9 +95,7 @@ export default function BookIndex() {
                 }}
                 onPress={() => router.push("/(user)/book/select-service")}
               >
-                <ButtonText style={{ color: c.accent }}>
-                  Hizmet Seç
-                </ButtonText>
+                <ButtonText style={{ color: c.accent }}>Hizmet Seç</ButtonText>
               </Button>
             </VStack>
           </View>

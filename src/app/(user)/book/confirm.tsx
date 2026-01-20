@@ -1,16 +1,22 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
-
 import { Text } from "@/components/ui/text";
 import Card from "@/src/components/Card";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
+import { useAppAlert } from "@/src/components/AppAlertProvider";
 import { auth } from "@/src/lib/firebase";
-import { checkBarberAvailability, createAppointment } from "@/src/services/appointmentService";
+import {
+  checkBarberAvailability,
+  createAppointment,
+} from "@/src/services/appointmentService";
 import { getBarberById } from "@/src/services/barbers.service";
-import { getServiceById, type ServiceDoc } from "@/src/services/services.service";
+import {
+  getServiceById,
+  type ServiceDoc,
+} from "@/src/services/services.service";
 
 type BarberDocLite = {
   id: string;
@@ -20,8 +26,29 @@ type BarberDocLite = {
 };
 
 function formatDateTimeTR(d: Date) {
-  const months = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
-  const days = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+  const months = [
+    "Ocak",
+    "Şubat",
+    "Mart",
+    "Nisan",
+    "Mayıs",
+    "Haziran",
+    "Temmuz",
+    "Ağustos",
+    "Eylül",
+    "Ekim",
+    "Kasım",
+    "Aralık",
+  ];
+  const days = [
+    "Pazar",
+    "Pazartesi",
+    "Salı",
+    "Çarşamba",
+    "Perşembe",
+    "Cuma",
+    "Cumartesi",
+  ];
   const day = d.getDate();
   const month = months[d.getMonth()];
   const dow = days[d.getDay()];
@@ -42,9 +69,12 @@ export default function Confirm() {
     endAt?: string;
   }>();
 
-  const serviceId = typeof params.serviceId === "string" ? params.serviceId : undefined;
-  const barberId = typeof params.barberId === "string" ? params.barberId : undefined;
-  const startAtISO = typeof params.startAt === "string" ? params.startAt : undefined;
+  const serviceId =
+    typeof params.serviceId === "string" ? params.serviceId : undefined;
+  const barberId =
+    typeof params.barberId === "string" ? params.barberId : undefined;
+  const startAtISO =
+    typeof params.startAt === "string" ? params.startAt : undefined;
   const endAtISO = typeof params.endAt === "string" ? params.endAt : undefined;
 
   const startAt = startAtISO ? new Date(startAtISO) : null;
@@ -85,10 +115,10 @@ export default function Confirm() {
                 imageUrl: (brb as any).imageUrl ?? "",
                 shopId: (brb as any).shopId ?? "main",
               }
-            : null
+            : null,
         );
       } catch (e: any) {
-        Alert.alert("Hata", "Randevu bilgileri yüklenemedi.");
+        alert("Hata", "Randevu bilgileri yüklenemedi.");
         setService(null);
         setBarber(null);
       } finally {
@@ -102,15 +132,17 @@ export default function Confirm() {
     return !serviceId || !barberId || !startAt || !endAt || !service || !barber;
   }, [serviceId, barberId, startAt, endAt, service, barber]);
 
+  const { alert, confirm } = useAppAlert();
+
   async function onConfirm() {
     if (invalid) {
-      Alert.alert("Hata", "Eksik bilgi var. Lütfen tekrar deneyin.");
+      alert("Hata", "Eksik bilgi var. Lütfen tekrar deneyin.");
       return;
     }
 
     const uid = auth.currentUser?.uid;
     if (!uid) {
-      Alert.alert("Giriş gerekli", "Randevu almak için giriş yapmalısın.");
+      alert("Giriş gerekli", "Randevu almak için giriş yapmalısın.");
       router.replace("/(auth)/login");
       return;
     }
@@ -120,7 +152,6 @@ export default function Confirm() {
 
       const shopId = barber?.shopId ?? "main";
 
-      // ✅ Son saniye kontrolü
       const ok = await checkBarberAvailability({
         shopId,
         barberId: barberId!,
@@ -129,17 +160,16 @@ export default function Confirm() {
       });
 
       if (!ok.available) {
-        Alert.alert("Dolu saat", "Seçtiğin saat dolmuş. Lütfen başka bir saat seç.");
+        alert("Dolu saat", "Seçtiğin saat dolmuş. Lütfen başka bir saat seç.");
         router.back();
         return;
       }
 
-      await createAppointment({
+      const result = await createAppointment({
         shopId,
         userId: uid,
         barberId: barberId!,
         serviceId: serviceId!,
-
         serviceSnapshot: {
           name: service!.name,
           description: service!.description,
@@ -147,28 +177,37 @@ export default function Confirm() {
           price: service!.price,
           imageUrl: service!.imageUrl,
         },
-
         barberSnapshot: {
           name: barber!.name,
           imageUrl: barber!.imageUrl,
         },
-
         startAt: startAt!,
         endAt: endAt!,
         status: "PENDING",
       });
 
-      Alert.alert("Başarılı", "Randevun oluşturuldu.");
-      router.replace("/(user)");
+      // ✅ Başarı: kendi alert’in
+      alert("Başarılı", "Randevun oluşturuldu.", [
+        {
+          text: "Tamam",
+          onPress: () => {
+            // ✅ Akışı temiz başlat: book root’a dön (param yok)
+            router.replace({ pathname: "/(user)/book", params: {} });
+
+            // Eğer direkt ana sayfaya dönmek istiyorsan:
+            // router.replace("/(user)");
+          },
+        },
+      ]);
     } catch (e: any) {
       const msg = String(e?.message || "");
-      if (msg.includes("requires an index")) {
-        Alert.alert(
+      if (msg.includes("requires an index") || msg.includes("index")) {
+        alert(
           "Firestore Index Gerekli",
-          "Bu sorgu için index gerekli. Firebase Console’dan index oluşturmalısın."
+          "Bu sorgu için index gerekiyor. Firebase Console’dan index oluşturup tamamlanmasını beklemelisin.",
         );
       } else {
-        Alert.alert("Hata", "Randevu oluşturulamadı. Tekrar deneyin.");
+        alert("Hata", "Randevu oluşturulamadı. Tekrar deneyin.");
       }
     } finally {
       setSaving(false);
@@ -177,7 +216,10 @@ export default function Confirm() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center" style={{ backgroundColor: c.screenBg }}>
+      <View
+        className="flex-1 items-center justify-center"
+        style={{ backgroundColor: c.screenBg }}
+      >
         <ActivityIndicator />
         <Text className="mt-2" style={{ color: c.textMuted }}>
           Bilgiler yükleniyor...
@@ -200,9 +242,16 @@ export default function Confirm() {
 
       <View className="px-4 gap-4">
         {/* Summary */}
-        <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+        <Card
+          bg={c.surfaceBg}
+          border={c.surfaceBorder}
+          shadowColor={c.shadowColor}
+        >
           <View className="px-4 py-4">
-            <Text className="text-xs font-semibold" style={{ color: c.textMuted }}>
+            <Text
+              className="text-xs font-semibold"
+              style={{ color: c.textMuted }}
+            >
               ÖZET
             </Text>
 
@@ -210,7 +259,10 @@ export default function Confirm() {
               <Text className="text-sm" style={{ color: c.textMuted }}>
                 Hizmet
               </Text>
-              <Text className="text-base font-bold mt-1" style={{ color: c.text }}>
+              <Text
+                className="text-base font-bold mt-1"
+                style={{ color: c.text }}
+              >
                 {service?.name ?? "—"}
               </Text>
               {service ? (
@@ -224,7 +276,10 @@ export default function Confirm() {
               <Text className="text-sm" style={{ color: c.textMuted }}>
                 Berber
               </Text>
-              <Text className="text-base font-bold mt-1" style={{ color: c.text }}>
+              <Text
+                className="text-base font-bold mt-1"
+                style={{ color: c.text }}
+              >
                 {barber?.name ?? "—"}
               </Text>
             </View>
@@ -233,7 +288,10 @@ export default function Confirm() {
               <Text className="text-sm" style={{ color: c.textMuted }}>
                 Tarih & Saat
               </Text>
-              <Text className="text-base font-bold mt-1" style={{ color: c.text }}>
+              <Text
+                className="text-base font-bold mt-1"
+                style={{ color: c.text }}
+              >
                 {startAt ? formatDateTimeTR(startAt) : "—"}
               </Text>
             </View>
@@ -241,13 +299,21 @@ export default function Confirm() {
         </Card>
 
         {/* Info */}
-        <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+        <Card
+          bg={c.surfaceBg}
+          border={c.surfaceBorder}
+          shadowColor={c.shadowColor}
+        >
           <View className="px-4 py-4">
-            <Text className="text-xs font-semibold" style={{ color: c.textMuted }}>
+            <Text
+              className="text-xs font-semibold"
+              style={{ color: c.textMuted }}
+            >
               BİLGİ
             </Text>
             <Text className="text-sm mt-2" style={{ color: c.textMuted }}>
-              Randevun oluşturulduktan sonra durum “Beklemede” olarak görünebilir. Berber onayladığında “Onaylandı” olur.
+              Randevun oluşturulduktan sonra durum “Beklemede” olarak
+              görünebilir. Berber onayladığında “Onaylandı” olur.
             </Text>
           </View>
         </Card>
@@ -258,18 +324,26 @@ export default function Confirm() {
             <View
               className="rounded-2xl py-4 items-center justify-center border"
               style={{
-                backgroundColor: saving || invalid ? "transparent" : c.accentSoft,
-                borderColor: saving || invalid ? c.surfaceBorder : c.accentBorder,
+                backgroundColor:
+                  saving || invalid ? "transparent" : c.accentSoft,
+                borderColor:
+                  saving || invalid ? c.surfaceBorder : c.accentBorder,
                 opacity: saving || invalid ? 0.6 : 1,
               }}
             >
-              <Text className="font-semibold" style={{ color: saving || invalid ? c.textMuted : c.accent }}>
+              <Text
+                className="font-semibold"
+                style={{ color: saving || invalid ? c.textMuted : c.accent }}
+              >
                 {saving ? "Oluşturuluyor..." : "Randevuyu Oluştur"}
               </Text>
             </View>
           </Pressable>
 
-          <Pressable disabled={saving} onPress={() => router.replace("/(user)/book")}>
+          <Pressable
+            disabled={saving}
+            onPress={() => router.replace("/(user)")}
+          >
             <View
               className="rounded-2xl py-4 items-center justify-center border"
               style={{

@@ -213,13 +213,12 @@ export default function MyAppointmentsScreen() {
 
   return (
     <View className="flex-1 pt-10" style={{ backgroundColor: c.screenBg }}>
-      {/* Header */}
       <View className="px-4 pt-5 pb-2">
         <Text className="text-2xl font-bold" style={{ color: c.text }}>
           Randevularım
         </Text>
         <Text className="mt-1" style={{ color: c.textMuted }}>
-          Yaklaşan ve geçmiş randevularını buradan yönet.
+          Randevularım
         </Text>
       </View>
 
