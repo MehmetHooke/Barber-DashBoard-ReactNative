@@ -167,7 +167,7 @@ export default function UserHome() {
           c={c}
           onPress={() =>
             router.push({
-              pathname: "/(user)/mybooks",
+              pathname: "/(user)/(tabs)/mybooks",
               params: { appointmentId: upcoming.id },
             })
           }
@@ -221,7 +221,7 @@ export default function UserHome() {
         badge: i === 0 ? "Popüler" : undefined,
         onPress: () =>
           router.replace({
-            pathname: "/(user)/book/barber-detail",
+            pathname: "/(user)/(tabs)/book/barber-detail",
             params: { serviceId: s.id },
           }),
       }));

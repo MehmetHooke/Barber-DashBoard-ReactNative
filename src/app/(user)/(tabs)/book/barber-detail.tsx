@@ -224,7 +224,10 @@ export default function BarberDetail() {
       cancelText: "Vazgeç",
       confirmText: "Değiştir",
       onConfirm: () => {
-        router.replace({ pathname: "/(user)/book/select-service", params: {} });
+        router.replace({
+          pathname: "/(user)/(tabs)/book/select-service",
+          params: {},
+        });
       },
     });
   }
@@ -277,7 +280,7 @@ export default function BarberDetail() {
                 onPress={() => {
                   if (!serviceId) return;
                   router.push({
-                    pathname: "/(user)/book/select-time",
+                    pathname: "/(user)/(tabs)/book/select-time",
                     params: { serviceId, barberId: item.id },
                   });
                 }}

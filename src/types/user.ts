@@ -1,11 +1,11 @@
-
 export type UserRole = "USER" | "BARBER";
 
 export type UserDoc = {
-    uid: string;
-    name: string;
-    surname:string;
-    phone:string;
-    role:string;
-    createdAt:number;
-}
+  uid: string;
+  name: string;
+  surname: string;
+  phone: string;
+  role: string;
+  createdAt: number;
+  profileImage?: string; //new profile image download url
+};

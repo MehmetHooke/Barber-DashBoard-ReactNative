@@ -20,7 +20,7 @@ export async function registerWithEmail(params: {
   const cred = await createUserWithEmailAndPassword(
     auth,
     email.trim(),
-    password.trim()
+    password.trim(),
   );
   const uid = cred.user.uid;
 
@@ -33,6 +33,7 @@ export async function registerWithEmail(params: {
     phone: phone.trim(),
     role: "USER", //herkes user şimdilik bu yetkiyi uygulamaya sahip olan işletmelerin oturumlarına db üzerinden verilecek.
     createdAt: Date.now(),
+    profileImage: "",
   });
 
   return cred.user;
@@ -42,7 +43,7 @@ export async function loginWithEmail(email: string, password: string) {
   const cred = await signInWithEmailAndPassword(
     auth,
     email.trim(),
-    password.trim()
+    password.trim(),
   );
 
   const uid = cred.user.uid;

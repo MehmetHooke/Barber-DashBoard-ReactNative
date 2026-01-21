@@ -194,7 +194,7 @@ export default function MyAppointmentsScreen() {
               borderColor: c.surfaceBorder,
               backgroundColor: c.screenBg,
             }}
-            onPress={() => router.push("/(user)")} // senin akışına göre: hizmet seçme sayfası
+            onPress={() => router.push("/(user)/(tabs)")} // senin akışına göre: hizmet seçme sayfası
           >
             <Text className="text-sm font-semibold" style={{ color: c.text }}>
               Randevu Oluştur

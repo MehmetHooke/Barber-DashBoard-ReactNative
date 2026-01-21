@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
@@ -28,10 +28,18 @@ function SectionTitle({ title, color }: { title: string; color: string }) {
   );
 }
 
-
-
-function Divider({ color, insetLeft = 16 }: { color: string; insetLeft?: number }) {
-  return <View style={{ height: 1, marginLeft: insetLeft, backgroundColor: color }} />;
+function Divider({
+  color,
+  insetLeft = 16,
+}: {
+  color: string;
+  insetLeft?: number;
+}) {
+  return (
+    <View
+      style={{ height: 1, marginLeft: insetLeft, backgroundColor: color }}
+    />
+  );
 }
 
 function Row({
@@ -70,7 +78,11 @@ function Row({
             {title}
           </Text>
           {subtitle ? (
-            <Text className="text-xs mt-1" style={{ color: mutedColor }} numberOfLines={1}>
+            <Text
+              className="text-xs mt-1"
+              style={{ color: mutedColor }}
+              numberOfLines={1}
+            >
               {subtitle}
             </Text>
           ) : null}
@@ -121,7 +133,10 @@ function ThemePill({
         borderColor: selected ? accentBorder : borderDefault,
       }}
     >
-      <Text className="font-semibold" style={{ color: selected ? accent : mutedColor }}>
+      <Text
+        className="font-semibold"
+        style={{ color: selected ? accent : mutedColor }}
+      >
         {label}
       </Text>
     </Pressable>
@@ -196,16 +211,28 @@ export default function UserSettings() {
       <View className="px-4 flex-1">
         {/* Account */}
         <SectionTitle title="HESAP" color={c.textMuted} />
-        <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+        <Card
+          bg={c.surfaceBg}
+          border={c.surfaceBorder}
+          shadowColor={c.shadowColor}
+        >
           <View className="px-4 py-4 flex-row items-center">
             <View
-              className="w-12 h-12 rounded-2xl items-center justify-center mr-3 border"
+              className="w-12 h-12 rounded-2xl items-center justify-center mr-3 border overflow-hidden"
               style={{
                 backgroundColor: c.accentSoft,
                 borderColor: c.accentBorder,
               }}
             >
-              <Ionicons name="person" size={22} color={c.accent} />
+              {profile?.profileImage ? (
+                <Image
+                  source={{ uri: profile.profileImage }}
+                  style={{ width: 48, height: 48 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name="person" size={22} color={c.accent} />
+              )}
             </View>
 
             {loadingProfile ? (
@@ -233,7 +260,7 @@ export default function UserSettings() {
             icon="call-outline"
             title="Telefon"
             subtitle={profile?.phone ?? "—"}
-            onPress={() => Alert.alert("Yakında", "Profil düzenleme yakında.")}
+            onPress={() => router.push("/(user)/changePhone")}
             textColor={c.text}
             mutedColor={c.textMuted}
             dividerColor={c.divider}
@@ -244,7 +271,7 @@ export default function UserSettings() {
             icon="create-outline"
             title="Profili Düzenle"
             subtitle="Ad, telefon ve diğer bilgileri güncelle"
-            onPress={() => Alert.alert("Yakında", "Profil düzenleme yakında.")}
+            onPress={() => router.push("/(user)/editProfile")}
             textColor={c.text}
             mutedColor={c.textMuted}
             dividerColor={c.divider}
@@ -255,14 +282,22 @@ export default function UserSettings() {
 
         {/* Appearance */}
         <SectionTitle title="GÖRÜNÜM" color={c.textMuted} />
-        <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+        <Card
+          bg={c.surfaceBg}
+          border={c.surfaceBorder}
+          shadowColor={c.shadowColor}
+        >
           <View className="px-4 py-4">
             <View className="flex-row items-center">
               <View
                 className="w-10 h-10 rounded-xl items-center justify-center mr-3"
                 style={{ backgroundColor: c.accentSoft }}
               >
-                <Ionicons name="color-palette-outline" size={18} color={c.accent} />
+                <Ionicons
+                  name="color-palette-outline"
+                  size={18}
+                  color={c.accent}
+                />
               </View>
 
               <View className="flex-1">
@@ -315,7 +350,11 @@ export default function UserSettings() {
 
         {/* Other */}
         <SectionTitle title="DİĞER" color={c.textMuted} />
-        <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+        <Card
+          bg={c.surfaceBg}
+          border={c.surfaceBorder}
+          shadowColor={c.shadowColor}
+        >
           <Row
             icon="help-circle-outline"
             title="Destek"
@@ -343,7 +382,10 @@ export default function UserSettings() {
         {/* Logout */}
         <View className="mt-5">
           <Button
-            style={{ backgroundColor: c.accentSoft, borderColor: c.accentBorder }}
+            style={{
+              backgroundColor: c.accentSoft,
+              borderColor: c.accentBorder,
+            }}
             variant="outline"
             className="rounded-xl"
             onPress={onLogout}
