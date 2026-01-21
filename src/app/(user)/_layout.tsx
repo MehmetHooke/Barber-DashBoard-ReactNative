@@ -19,6 +19,21 @@ export default function UserLayout() {
           contentStyle: { backgroundColor: "transparent" },
         }}
       />
+
+      <Stack.Screen
+        name="support"
+        options={{
+          presentation: "transparentModal",
+          contentStyle: { backgroundColor: "transparent" },
+        }}
+      />
+      <Stack.Screen
+        name="about"
+        options={{
+          presentation: "transparentModal",
+          contentStyle: { backgroundColor: "transparent" },
+        }}
+      />
     </Stack>
   );
 }

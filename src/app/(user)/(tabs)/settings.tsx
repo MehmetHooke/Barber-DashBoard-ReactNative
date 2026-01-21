@@ -1,20 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
-import { auth } from "@/src/lib/firebase";
+import { auth, db } from "@/src/lib/firebase";
 import { logout } from "@/src/services/auth.service";
-import { getUserDoc } from "@/src/services/user.service";
 import type { UserDoc } from "@/src/types/user";
 
 import { useAppAlert } from "@/src/components/AppAlertProvider";
 import Card from "@/src/components/Card";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
+import { doc, onSnapshot } from "firebase/firestore";
 
 type ThemePreference = "system" | "light" | "dark";
 
@@ -154,16 +154,23 @@ export default function UserSettings() {
   const { confirm, alert } = useAppAlert();
 
   useEffect(() => {
-    (async () => {
-      try {
-        const uid = auth.currentUser?.uid;
-        if (!uid) return;
-        const data = await getUserDoc(uid);
-        setProfile(data);
-      } finally {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    setLoadingProfile(true);
+
+    const unsub = onSnapshot(
+      doc(db, "users", uid),
+      (snap) => {
+        setProfile((snap.data() as UserDoc) ?? null);
         setLoadingProfile(false);
-      }
-    })();
+      },
+      () => {
+        setLoadingProfile(false);
+      },
+    );
+
+    return () => unsub();
   }, []);
 
   const themeSubtitle = useMemo(() => {
@@ -359,7 +366,7 @@ export default function UserSettings() {
             icon="help-circle-outline"
             title="Destek"
             subtitle="Sorun bildir / iletişim"
-            onPress={() => Alert.alert("Yakında", "Destek ekranı yakında.")}
+            onPress={() => router.push("/(user)/support")}
             textColor={c.text}
             mutedColor={c.textMuted}
             dividerColor={c.divider}
@@ -370,7 +377,7 @@ export default function UserSettings() {
             icon="information-circle-outline"
             title="Hakkında"
             subtitle="Sürüm, lisans, bilgiler"
-            onPress={() => Alert.alert("Yakında", "Hakkında ekranı yakında.")}
+            onPress={() => router.push("/(user)/about")}
             textColor={c.text}
             mutedColor={c.textMuted}
             dividerColor={c.divider}
