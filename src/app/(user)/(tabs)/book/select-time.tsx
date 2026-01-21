@@ -14,15 +14,47 @@ import Card from "@/src/components/Card";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
 
-import { getBarberAppointmentsForDay } from "@/src/services/appointmentService";
-import { getBarberById, type BarberDoc, type DayHours, type WorkingBreak, type WorkingHours } from "@/src/services/barbers.service";
-import { getServiceById, type ServiceDoc } from "@/src/services/services.service";
+import { getBarberAppointmentsForDay } from "@/src/services/appointment.service";
+import {
+  getBarberById,
+  type BarberDoc,
+  type DayHours,
+  type WorkingBreak,
+  type WorkingHours,
+} from "@/src/services/barbers.service";
+import {
+  getServiceById,
+  type ServiceDoc,
+} from "@/src/services/services.service";
 
 // -------------------- Helpers --------------------
-const TR_MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"] as const;
-const TR_DAYS = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"] as const;
+const TR_MONTHS = [
+  "Ocak",
+  "Şubat",
+  "Mart",
+  "Nisan",
+  "Mayıs",
+  "Haziran",
+  "Temmuz",
+  "Ağustos",
+  "Eylül",
+  "Ekim",
+  "Kasım",
+  "Aralık",
+] as const;
+const TR_DAYS = [
+  "Pazar",
+  "Pazartesi",
+  "Salı",
+  "Çarşamba",
+  "Perşembe",
+  "Cuma",
+  "Cumartesi",
+] as const;
 
-function pad2(n: number) { return n < 10 ? `0${n}` : `${n}`; }
+function pad2(n: number) {
+  return n < 10 ? `0${n}` : `${n}`;
+}
 function formatFullDateTR(d: Date) {
   const day = d.getDate();
   const month = TR_MONTHS[d.getMonth()];
@@ -47,12 +79,20 @@ function addMinutes(base: Date, minutes: number) {
   return new Date(base.getTime() + minutes * 60 * 1000);
 }
 function sameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
   return aStart < bEnd && aEnd > bStart;
 }
-function inBreaks(slotStartMin: number, slotEndMin: number, breaks?: WorkingBreak[]) {
+function inBreaks(
+  slotStartMin: number,
+  slotEndMin: number,
+  breaks?: WorkingBreak[],
+) {
   if (!breaks?.length) return false;
   for (const br of breaks) {
     const bs = timeToMinutes(br.start);
@@ -63,7 +103,15 @@ function inBreaks(slotStartMin: number, slotEndMin: number, breaks?: WorkingBrea
 }
 
 // -------------------- UI Pieces --------------------
-function SelectedSummary({ c, service, barber }: { c: any; service?: ServiceDoc | null; barber?: BarberDoc | null }) {
+function SelectedSummary({
+  c,
+  service,
+  barber,
+}: {
+  c: any;
+  service?: ServiceDoc | null;
+  barber?: BarberDoc | null;
+}) {
   return (
     <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
       <View className="px-4 py-4">
@@ -72,7 +120,9 @@ function SelectedSummary({ c, service, barber }: { c: any; service?: ServiceDoc 
         </Text>
 
         <View className="mt-3">
-          <Text className="text-sm" style={{ color: c.textMuted }}>Hizmet</Text>
+          <Text className="text-sm" style={{ color: c.textMuted }}>
+            Hizmet
+          </Text>
           <Text className="text-base font-bold mt-1" style={{ color: c.text }}>
             {service?.name ?? "—"}
           </Text>
@@ -84,7 +134,9 @@ function SelectedSummary({ c, service, barber }: { c: any; service?: ServiceDoc 
         </View>
 
         <View className="mt-4">
-          <Text className="text-sm" style={{ color: c.textMuted }}>Berber</Text>
+          <Text className="text-sm" style={{ color: c.textMuted }}>
+            Berber
+          </Text>
           <Text className="text-base font-bold mt-1" style={{ color: c.text }}>
             {barber?.name ?? "—"}
           </Text>
@@ -95,7 +147,12 @@ function SelectedSummary({ c, service, barber }: { c: any; service?: ServiceDoc 
 }
 
 function DateCard({
-  c, title, dateText, selected, onPress, width,
+  c,
+  title,
+  dateText,
+  selected,
+  onPress,
+  width,
 }: {
   c: any;
   title?: string;
@@ -113,10 +170,18 @@ function DateCard({
           borderColor: selected ? c.accentBorder : c.surfaceBorder,
         }}
       >
-        <Text className="text-xs font-semibold" style={{ color: selected ? c.accent : c.textMuted }} numberOfLines={1}>
+        <Text
+          className="text-xs font-semibold"
+          style={{ color: selected ? c.accent : c.textMuted }}
+          numberOfLines={1}
+        >
           {title || " "}
         </Text>
-        <Text className="text-sm font-semibold mt-1" style={{ color: c.text }} numberOfLines={2}>
+        <Text
+          className="text-sm font-semibold mt-1"
+          style={{ color: c.text }}
+          numberOfLines={2}
+        >
           {dateText}
         </Text>
       </View>
@@ -125,7 +190,12 @@ function DateCard({
 }
 
 function TimeSlotCard({
-  c, label, subLabel, disabled, selected, onPress,
+  c,
+  label,
+  subLabel,
+  disabled,
+  selected,
+  onPress,
 }: {
   c: any;
   label: string;
@@ -163,9 +233,14 @@ export default function SelectTime() {
   const { effectiveTheme } = useAppTheme();
   const c = colors[effectiveTheme];
 
-  const params = useLocalSearchParams<{ serviceId?: string; barberId?: string }>();
-  const serviceId = typeof params.serviceId === "string" ? params.serviceId : undefined;
-  const barberId = typeof params.barberId === "string" ? params.barberId : undefined;
+  const params = useLocalSearchParams<{
+    serviceId?: string;
+    barberId?: string;
+  }>();
+  const serviceId =
+    typeof params.serviceId === "string" ? params.serviceId : undefined;
+  const barberId =
+    typeof params.barberId === "string" ? params.barberId : undefined;
 
   // ✅ Firestore verileri
   const [service, setService] = useState<ServiceDoc | null>(null);
@@ -181,14 +256,23 @@ export default function SelectTime() {
       const d = new Date(now);
       d.setDate(now.getDate() + i);
       const title = i === 0 ? "Bugün" : i === 1 ? "Yarın" : "";
-      out.push({ date: d, title, full: formatFullDateTR(d), key: d.toISOString() });
+      out.push({
+        date: d,
+        title,
+        full: formatFullDateTR(d),
+        key: d.toISOString(),
+      });
     }
     return out;
   }, []);
 
-  const [selectedDay, setSelectedDay] = useState<Date>(days[0]?.date ?? new Date());
+  const [selectedDay, setSelectedDay] = useState<Date>(
+    days[0]?.date ?? new Date(),
+  );
   const [loadingBusy, setLoadingBusy] = useState(false);
-  const [busyRanges, setBusyRanges] = useState<{ startAt: Date; endAt: Date }[]>([]);
+  const [busyRanges, setBusyRanges] = useState<
+    { startAt: Date; endAt: Date }[]
+  >([]);
   const [selectedStart, setSelectedStart] = useState<Date | null>(null);
 
   // Date slider
@@ -216,7 +300,10 @@ export default function SelectTime() {
       } catch (e: any) {
         const msg = String(e?.message || "");
         if (msg.includes("requires an index")) {
-          Alert.alert("Firestore Index", "Bu sorgu için index gerekli (Console).");
+          Alert.alert(
+            "Firestore Index",
+            "Bu sorgu için index gerekli (Console).",
+          );
         } else {
           Alert.alert("Hata", "Veriler yüklenemedi.");
         }
@@ -257,11 +344,16 @@ export default function SelectTime() {
           day: selectedDay,
         });
 
-        setBusyRanges(list.map((x) => ({ startAt: x.startAt, endAt: x.endAt })));
+        setBusyRanges(
+          list.map((x) => ({ startAt: x.startAt, endAt: x.endAt })),
+        );
       } catch (e: any) {
         const msg = String(e?.message || "");
         if (msg.includes("requires an index")) {
-          Alert.alert("Firestore Index", "Randevu sorgusu için index gerekli (Console).");
+          Alert.alert(
+            "Firestore Index",
+            "Randevu sorgusu için index gerekli (Console).",
+          );
         } else {
           Alert.alert("Hata", "Dolu saatler alınamadı.");
         }
@@ -290,7 +382,12 @@ export default function SelectTime() {
     const duration = service.durationMin;
 
     const now = new Date();
-    const items: { label: string; startAt: Date; endAt: Date; disabled: boolean }[] = [];
+    const items: {
+      label: string;
+      startAt: Date;
+      endAt: Date;
+      disabled: boolean;
+    }[] = [];
 
     for (let m = startMin; m + duration <= endMin; m += step) {
       const slotStartMin = m;
@@ -301,11 +398,14 @@ export default function SelectTime() {
       const endAt = addMinutes(startAt, duration);
 
       const isBreak = inBreaks(slotStartMin, slotEndMin, conf.breaks);
-      const isPast = sameDay(selectedDay, now) && startAt.getTime() <= now.getTime();
+      const isPast =
+        sameDay(selectedDay, now) && startAt.getTime() <= now.getTime();
 
       const s = startAt.getTime();
       const e = endAt.getTime();
-      const isBusy = busyRanges.some((b) => overlaps(s, e, b.startAt.getTime(), b.endAt.getTime()));
+      const isBusy = busyRanges.some((b) =>
+        overlaps(s, e, b.startAt.getTime(), b.endAt.getTime()),
+      );
 
       items.push({
         label: minutesToTime(slotStartMin),
@@ -327,7 +427,10 @@ export default function SelectTime() {
 
   if (loadingTop) {
     return (
-      <View className="flex-1 items-center justify-center" style={{ backgroundColor: c.screenBg }}>
+      <View
+        className="flex-1 items-center justify-center"
+        style={{ backgroundColor: c.screenBg }}
+      >
         <ActivityIndicator />
         <Text className="mt-2" style={{ color: c.textMuted }}>
           Yükleniyor...
@@ -389,13 +492,18 @@ export default function SelectTime() {
             </Text>
           </View>
         ) : noWorkingHours ? (
-          <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+          <Card
+            bg={c.surfaceBg}
+            border={c.surfaceBorder}
+            shadowColor={c.shadowColor}
+          >
             <View className="p-4">
               <Text className="font-semibold" style={{ color: c.text }}>
                 Çalışma saatleri ayarlanmamış
               </Text>
               <Text className="mt-1 text-sm" style={{ color: c.textMuted }}>
-                Berber panelinden “Çalışma Saatleri” eklenince burada saatler görünecek.
+                Berber panelinden “Çalışma Saatleri” eklenince burada saatler
+                görünecek.
               </Text>
             </View>
           </Card>
@@ -416,12 +524,17 @@ export default function SelectTime() {
             columnWrapperStyle={{ gap: 12 }}
             contentContainerStyle={{ paddingBottom: 120, gap: 12 }}
             renderItem={({ item }) => {
-              const selected = selectedStart?.toISOString() === item.startAt.toISOString();
+              const selected =
+                selectedStart?.toISOString() === item.startAt.toISOString();
               return (
                 <TimeSlotCard
                   c={c}
                   label={item.label}
-                  subLabel={service ? `${service.durationMin} dk • ${service.price} ₺` : ""}
+                  subLabel={
+                    service
+                      ? `${service.durationMin} dk • ${service.price} ₺`
+                      : ""
+                  }
                   disabled={item.disabled}
                   selected={selected}
                   onPress={() => setSelectedStart(item.startAt)}
@@ -435,7 +548,11 @@ export default function SelectTime() {
       {/* Bottom bar */}
       <View
         className="absolute left-0 right-0 bottom-0 px-4 pb-6 pt-3"
-        style={{ backgroundColor: c.screenBg, borderTopWidth: 1, borderTopColor: c.divider }}
+        style={{
+          backgroundColor: c.screenBg,
+          borderTopWidth: 1,
+          borderTopColor: c.divider,
+        }}
       >
         <Pressable
           disabled={!canContinue}
@@ -462,7 +579,10 @@ export default function SelectTime() {
               opacity: canContinue ? 1 : 0.6,
             }}
           >
-            <Text className="font-semibold" style={{ color: canContinue ? c.accent : c.textMuted }}>
+            <Text
+              className="font-semibold"
+              style={{ color: canContinue ? c.accent : c.textMuted }}
+            >
               Devam Et
             </Text>
           </View>

@@ -11,7 +11,7 @@ import { auth } from "@/src/lib/firebase";
 import {
   checkBarberAvailability,
   createAppointment,
-} from "@/src/services/appointmentService";
+} from "@/src/services/appointment.service";
 import { getBarberById } from "@/src/services/barbers.service";
 import {
   getServiceById,

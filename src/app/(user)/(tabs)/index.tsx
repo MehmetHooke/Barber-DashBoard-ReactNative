@@ -16,7 +16,7 @@ import { colors } from "@/src/theme/colors";
 import UserHeroCarousel, {
   type HeroSlide,
 } from "@/src/components/UserHeroCarousel";
-import { getUpcomingAppointmentForUser } from "@/src/services/appointmentService";
+import { getUpcomingAppointmentForUser } from "@/src/services/appointment.service";
 import {
   getActiveServices,
   type ServiceDoc,

@@ -17,7 +17,7 @@ import { colors } from "@/src/theme/colors";
 import {
   getPastAppointmentsForUser,
   getUpcomingAppointmentForUser,
-} from "@/src/services/appointmentService";
+} from "@/src/services/appointment.service";
 import { getAuth } from "firebase/auth";
 
 type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
