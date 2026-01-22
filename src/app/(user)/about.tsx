@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef } from "react";
-import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { Animated, Linking, Pressable, StyleSheet, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
@@ -100,8 +100,9 @@ export default function AboutModal() {
                         borderColor: c.accentBorder,
                       }}
                       onPress={() => {
-                        // İstersen expo-linking ile URL açarız:
-                        // Linking.openURL("https://.../privacy");
+                        Linking.openURL(
+                          "https://mehmethooke.github.io/quickcv-privacy-policy.html",
+                        );
                       }}
                     >
                       <Text className="font-semibold" style={{ color: c.text }}>

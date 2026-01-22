@@ -22,7 +22,7 @@ import {
   pickAndUploadMyProfileImage,
   removeMyProfileImage,
   updateMyProfile,
-} from "@/src/services/userSettings.service";
+} from "@/src/services/barbersSettings.service";
 import { colors } from "@/src/theme/colors";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 
@@ -35,7 +35,7 @@ export default function EditProfile() {
   const [uploading, setUploading] = useState(false);
 
   const [name, setName] = useState("");
-  const [surname, setSurname] = useState("");
+
   const [profileImage, setProfileImage] = useState("");
 
   // ChangePhone gibi: 0 -> 1
@@ -58,8 +58,8 @@ export default function EditProfile() {
       try {
         const doc = await getMyUserDoc();
         setName(doc?.name ?? "");
-        setSurname(doc?.surname ?? "");
-        setProfileImage(doc?.profileImage ?? "");
+
+        setProfileImage(doc?.imageUrl ?? "");
       } finally {
         setLoading(false);
       }
@@ -95,11 +95,11 @@ export default function EditProfile() {
   }
 
   async function onSave() {
-    if (!name.trim() || !surname.trim()) return;
+    if (!name.trim()) return;
 
     try {
       setSaving(true);
-      await updateMyProfile({ name, surname });
+      await updateMyProfile({ name });
       close();
     } finally {
       setSaving(false);
@@ -204,31 +204,21 @@ export default function EditProfile() {
                     <>
                       <Input
                         className="rounded-xl"
-                        style={{ borderColor: c.surfaceBorder }}
+                        style={{
+                          borderColor: c.surfaceBorder,
+                          backgroundColor: c.surfaceBg,
+                        }}
                       >
                         <InputField
                           value={name}
                           onChangeText={setName}
                           placeholder="Ad"
-                          placeholderTextColor={c.textMuted}
-                          style={{ color: c.text }} // kritik
+                          placeholderTextColor={c.text}
+                          style={{ color: c.text }}
                         />
                       </Input>
 
                       <View className="h-3" />
-
-                      <Input
-                        className="rounded-xl"
-                        style={{ borderColor: c.surfaceBorder }}
-                      >
-                        <InputField
-                          value={surname}
-                          onChangeText={setSurname}
-                          placeholder="Soyad"
-                          placeholderTextColor={c.textMuted}
-                          style={{ color: c.text }} // kritik
-                        />
-                      </Input>
                     </>
                   )}
                 </View>

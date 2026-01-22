@@ -94,7 +94,7 @@ export default function SupportModal() {
                     Bize ulaş
                   </Text>
                   <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
-                    E-posta: hoke628@gmail.com{"\n"}
+                    E-posta: support@ornek.com{"\n"}
                     Çalışma saatleri: 10:00 - 20:00
                   </Text>
 
@@ -107,7 +107,8 @@ export default function SupportModal() {
                         borderColor: c.accentBorder,
                       }}
                       onPress={() => {
-                        "mailto:hoke628@gmail.com?subject=Destek";
+                        // Şimdilik placeholder. İstersen expo-linking ile mailto açtırırız.
+                        // Linking.openURL("mailto:support@ornek.com?subject=Destek");
                       }}
                     >
                       <Text className="font-semibold" style={{ color: c.text }}>
@@ -140,6 +141,8 @@ export default function SupportModal() {
                       variant="outline"
                       style={{ borderColor: c.surfaceBorder }}
                       onPress={() => {
+                        // İstersen burayı “Rapor Formu” ekranına yönlendirebiliriz.
+                        // Şimdilik kapatıyoruz.
                         close();
                       }}
                     >

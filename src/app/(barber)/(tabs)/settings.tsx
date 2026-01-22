@@ -1,18 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
 import { auth } from "@/src/lib/firebase";
 import { logout } from "@/src/services/auth.service";
-import { getUserDoc } from "@/src/services/user.service";
-import type { UserDoc } from "@/src/types/user";
+
 
 import { useAppAlert } from "@/src/components/AppAlertProvider";
 import Card from "@/src/components/Card";
+import { BarberDoc } from "@/src/services/barbers.service";
+import { getBarberDoc } from "@/src/services/barbersSettings.service";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
 
@@ -28,8 +29,18 @@ function SectionTitle({ title, color }: { title: string; color: string }) {
   );
 }
 
-function Divider({ color, insetLeft = 16 }: { color: string; insetLeft?: number }) {
-  return <View style={{ height: 1, marginLeft: insetLeft, backgroundColor: color }} />;
+function Divider({
+  color,
+  insetLeft = 16,
+}: {
+  color: string;
+  insetLeft?: number;
+}) {
+  return (
+    <View
+      style={{ height: 1, marginLeft: insetLeft, backgroundColor: color }}
+    />
+  );
 }
 
 function Row({
@@ -68,7 +79,11 @@ function Row({
             {title}
           </Text>
           {subtitle ? (
-            <Text className="text-xs mt-1" style={{ color: mutedColor }} numberOfLines={1}>
+            <Text
+              className="text-xs mt-1"
+              style={{ color: mutedColor }}
+              numberOfLines={1}
+            >
               {subtitle}
             </Text>
           ) : null}
@@ -117,7 +132,10 @@ function ThemePill({
         borderColor: selected ? accentBorder : borderDefault,
       }}
     >
-      <Text className="font-semibold" style={{ color: selected ? accent : mutedColor }}>
+      <Text
+        className="font-semibold"
+        style={{ color: selected ? accent : mutedColor }}
+      >
         {label}
       </Text>
     </Pressable>
@@ -129,17 +147,19 @@ export default function BarberSettings() {
   const theme = effectiveTheme; // "light" | "dark"
   const c = colors[theme];
 
-  const [profile, setProfile] = useState<UserDoc | null>(null);
+  const [profile, setProfile] = useState<BarberDoc | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
-    const { confirm, alert } = useAppAlert();
+  const { confirm, alert } = useAppAlert();
+
+  const hasImage = profile?.imageUrl && profile?.imageUrl.trim().length > 0;
 
   useEffect(() => {
     (async () => {
       try {
         const uid = auth.currentUser?.uid;
         if (!uid) return;
-        const data = await getUserDoc(uid);
+        const data = await getBarberDoc(uid);
         setProfile(data);
       } finally {
         setLoadingProfile(false);
@@ -192,16 +212,28 @@ export default function BarberSettings() {
       <View className="px-4 flex-1">
         {/* Account */}
         <SectionTitle title="HESAP" color={c.textMuted} />
-        <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+        <Card
+          bg={c.surfaceBg}
+          border={c.surfaceBorder}
+          shadowColor={c.shadowColor}
+        >
           <View className="px-4 py-4 flex-row items-center">
             <View
-              className="w-12 h-12 rounded-2xl items-center justify-center mr-3 border"
+              className="w-28 h-28 rounded-2xl items-center justify-center mr-3 border"
               style={{
                 backgroundColor: c.accentSoft,
                 borderColor: c.accentBorder,
               }}
             >
-              <Ionicons name="cut-outline" size={22} color={c.accent} />
+              {hasImage ? (
+                <Image
+                  source={{ uri: profile.imageUrl }}
+                  style={{ width: 112, height: 112, borderRadius: 10 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name="cut-outline" size={22} color={c.accent} />
+              )}
             </View>
 
             {loadingProfile ? (
@@ -212,9 +244,12 @@ export default function BarberSettings() {
                 </Text>
               </View>
             ) : (
-              <View className="flex-1">
-                <Text className="font-bold text-base" style={{ color: c.text }}>
-                  {profile ? `${profile.name} ${profile.surname}` : "Berber"}
+              <View className="flex-1 pl-5">
+                <Text
+                  className="font-bold  text-base"
+                  style={{ color: c.text }}
+                >
+                  {profile ? `${profile.name}` : "Berber"}
                 </Text>
                 <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
                   {auth.currentUser?.email ?? ""}
@@ -241,7 +276,7 @@ export default function BarberSettings() {
             icon="create-outline"
             title="Profili Düzenle"
             subtitle="İsim, telefon ve diğer bilgileri güncelle"
-            onPress={() => Alert.alert("Yakında", "Profil düzenleme yakında.")}
+            onPress={() => router.push("/(barber)/editProfile")}
             textColor={c.text}
             mutedColor={c.textMuted}
             dividerColor={c.divider}
@@ -252,14 +287,22 @@ export default function BarberSettings() {
 
         {/* Appearance */}
         <SectionTitle title="GÖRÜNÜM" color={c.textMuted} />
-        <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+        <Card
+          bg={c.surfaceBg}
+          border={c.surfaceBorder}
+          shadowColor={c.shadowColor}
+        >
           <View className="px-4 py-4">
             <View className="flex-row items-center">
               <View
                 className="w-10 h-10 rounded-xl items-center justify-center mr-3"
                 style={{ backgroundColor: c.accentSoft }}
               >
-                <Ionicons name="color-palette-outline" size={18} color={c.accent} />
+                <Ionicons
+                  name="color-palette-outline"
+                  size={18}
+                  color={c.accent}
+                />
               </View>
 
               <View className="flex-1">
@@ -309,12 +352,16 @@ export default function BarberSettings() {
 
         {/* Other */}
         <SectionTitle title="DİĞER" color={c.textMuted} />
-        <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+        <Card
+          bg={c.surfaceBg}
+          border={c.surfaceBorder}
+          shadowColor={c.shadowColor}
+        >
           <Row
             icon="help-circle-outline"
             title="Destek"
             subtitle="Sorun bildir / iletişim"
-            onPress={() => Alert.alert("Yakında", "Destek ekranı yakında.")}
+            onPress={() => router.push("/(barber)/support")}
             textColor={c.text}
             mutedColor={c.textMuted}
             dividerColor={c.divider}
@@ -325,7 +372,7 @@ export default function BarberSettings() {
             icon="information-circle-outline"
             title="Hakkında"
             subtitle="Sürüm, lisans, bilgiler"
-            onPress={() => Alert.alert("Yakında", "Hakkında ekranı yakında.")}
+            onPress={() => router.push("/(barber)/about")}
             textColor={c.text}
             mutedColor={c.textMuted}
             dividerColor={c.divider}
@@ -337,7 +384,10 @@ export default function BarberSettings() {
         {/* Logout */}
         <View className="mt-5">
           <Button
-            style={{ backgroundColor: c.accentSoft, borderColor: c.accentBorder }}
+            style={{
+              backgroundColor: c.accentSoft,
+              borderColor: c.accentBorder,
+            }}
             variant="outline"
             className="rounded-xl"
             onPress={onLogout}
