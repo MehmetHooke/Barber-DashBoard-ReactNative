@@ -1,5 +1,16 @@
 import { db } from "@/src/lib/firebase";
-import { addDoc, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, where } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 
 export type ServiceDoc = {
   id: string;
@@ -50,9 +61,6 @@ export async function createService(input: {
   return { id: ref.id };
 }
 
-
-
-
 export async function getServiceById(serviceId: string) {
   const ref = doc(db, "services", serviceId);
   const snap = await getDoc(ref);
@@ -74,13 +82,12 @@ export async function getServiceById(serviceId: string) {
   } as ServiceDoc;
 }
 
-
 export async function getActiveServices(shopId: string) {
   const q = query(
     collection(db, "services"),
     where("shopId", "==", shopId),
     where("active", "==", true),
-    orderBy("createdAt", "desc")
+    orderBy("createdAt", "desc"),
   );
 
   const snap = await getDocs(q);
@@ -101,4 +108,31 @@ export async function getActiveServices(shopId: string) {
       updatedAt: x.updatedAt?.toDate?.(),
     } as ServiceDoc;
   });
+}
+
+//update service
+export async function updateService(
+  serviceId: string,
+  input: {
+    name: string;
+    description: string;
+    imageUrl: string;
+    durationMin: number;
+    price: number;
+    active?: boolean;
+  },
+) {
+  const ref = doc(db, "services", serviceId);
+
+  await updateDoc(ref, {
+    name: input.name.trim(),
+    description: input.description.trim(),
+    imageUrl: input.imageUrl,
+    durationMin: input.durationMin,
+    price: input.price,
+    ...(typeof input.active === "boolean" ? { active: input.active } : {}),
+    updatedAt: serverTimestamp(),
+  });
+
+  return { id: serviceId };
 }
