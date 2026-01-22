@@ -10,6 +10,13 @@ import {
   View,
 } from "react-native";
 
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+
 import { Text } from "@/components/ui/text";
 import Card from "@/src/components/Card";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
@@ -326,7 +333,7 @@ export default function ServicesManage() {
               subtitle="Yeni bir hizmet oluşturmak için aşağıdan ekle."
             />
 
-            <AccordionCard
+            <AnimatedAccordionCard
               c={c}
               title="Hizmet Oluştur"
               subtitle="Yeni bir hizmet ekle"
@@ -378,7 +385,7 @@ export default function ServicesManage() {
               </Pressable>
 
               <View className="h-2" />
-            </AccordionCard>
+            </AnimatedAccordionCard>
 
             {/* ✅ Ayırıcı çizgi + Bölüm 2 başlığı */}
             <View
@@ -405,7 +412,7 @@ export default function ServicesManage() {
 
           return (
             <>
-              <AccordionCard
+              <AnimatedAccordionCard
                 c={c}
                 title={item.name}
                 subtitle={`${item.durationMin} dk • ${item.price} ₺`}
@@ -502,7 +509,7 @@ export default function ServicesManage() {
                 ) : null}
 
                 <View className="h-2" />
-              </AccordionCard>
+              </AnimatedAccordionCard>
             </>
           );
         }}
@@ -522,7 +529,7 @@ function emptyDraft(): Draft {
   };
 }
 
-function AccordionCard({
+function AnimatedAccordionCard({
   c,
   title,
   subtitle,
@@ -537,6 +544,25 @@ function AccordionCard({
   onToggle: () => void;
   children: React.ReactNode;
 }) {
+  const measuredH = useSharedValue(0);
+  const progress = useSharedValue(open ? 1 : 0);
+
+  // open değişince animasyon
+  React.useEffect(() => {
+    progress.value = withTiming(open ? 1 : 0, {
+      duration: 300,
+      easing: Easing.inOut(Easing.cubic),
+    });
+  }, [open]);
+
+  const bodyStyle = useAnimatedStyle(() => {
+    return {
+      height: measuredH.value * progress.value,
+      opacity: 0.25 + 0.75 * progress.value,
+      transform: [{ translateY: (1 - progress.value) * -8 }],
+    };
+  });
+
   return (
     <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
       <Pressable onPress={onToggle}>
@@ -549,6 +575,7 @@ function AccordionCard({
             >
               {title}
             </Text>
+
             {!!subtitle && (
               <Text
                 className="mt-1 text-xs"
@@ -566,10 +593,24 @@ function AccordionCard({
         </View>
       </Pressable>
 
-      {open ? <View className="px-4 pb-4">{children}</View> : null}
+      {/* Animated Body */}
+      <Animated.View style={[{ overflow: "hidden" }, bodyStyle]}>
+        {/* Measure Wrapper */}
+        <View
+          className="px-4 pb-4"
+          onLayout={(e) => {
+            const h = e.nativeEvent.layout.height;
+            // FlatList içinde bazen 0 gelebiliyor, güvenli set:
+            measuredH.value = Math.max(measuredH.value, h);
+          }}
+        >
+          {children}
+        </View>
+      </Animated.View>
     </Card>
   );
 }
+
 
 function ServiceForm({
   c,
@@ -582,8 +623,8 @@ function ServiceForm({
   c: any;
   draft: Draft;
   setDraft:
-    | React.Dispatch<React.SetStateAction<Draft>>
-    | ((updater: any) => void);
+  | React.Dispatch<React.SetStateAction<Draft>>
+  | ((updater: any) => void);
   onPickImage: () => void;
   imageUploading: boolean;
   placeholders?: Partial<Record<keyof Omit<Draft, "imageUrl">, string>>;
