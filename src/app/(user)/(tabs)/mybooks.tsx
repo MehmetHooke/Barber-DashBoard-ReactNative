@@ -20,7 +20,7 @@ import {
 } from "@/src/services/appointment.service";
 import { getAuth } from "firebase/auth";
 
-type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELED" | "COMPLETED";
 
 type AppointmentItem = {
   id: string;
@@ -52,22 +52,38 @@ function formatTimeTR(d: Date) {
 }
 
 function StatusBadge({ status, c }: { status: AppointmentStatus; c: any }) {
-  const label =
-    status === "PENDING"
-      ? "Berberden Onay Bekliyor"
-      : status === "CONFIRMED"
-        ? "Onaylandı"
-        : status === "COMPLETED"
-          ? "Tamamlandı"
-          : "İptal";
+  let label = "";
+  let textColor = c.textMuted;
+  let borderColor = c.surfaceBorder;
+  let bg = c.screenBg;
 
-  // basit ve tema uyumlu: border+text muted
+  switch (status) {
+    case "PENDING":
+      label = "Berberden Onay Bekliyor";
+      break;
+
+    case "CONFIRMED":
+      label = "Onaylandı";
+      break;
+
+    case "COMPLETED":
+      label = "Tamamlandı";
+      break;
+
+    case "CANCELED":
+      label = "İptal Edildi";
+      break;
+
+    default:
+      label = status;
+  }
+
   return (
     <View
       className="px-3 py-1 rounded-full border"
-      style={{ borderColor: c.surfaceBorder, backgroundColor: c.screenBg }}
+      style={{ borderColor, backgroundColor: bg }}
     >
-      <Text className="text-xs" style={{ color: c.textMuted }}>
+      <Text className="text-xs" style={{ color: textColor }}>
         {label}
       </Text>
     </View>
