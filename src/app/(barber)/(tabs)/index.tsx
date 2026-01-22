@@ -1,13 +1,12 @@
 // app/(barber)/home/index.tsx  (örnek path)
-import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
-
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import Card from "@/src/components/Card";
 import { colors } from "@/src/theme/colors";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
 import {
   AppointmentItem,
@@ -17,6 +16,7 @@ import {
   subscribeMyPendingAppointments,
   subscribeMyTodayAppointments,
 } from "@/src/services/berbersAppointment.service";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 function toDate(ts: any): Date | null {
   try {
@@ -27,6 +27,58 @@ function toDate(ts: any): Date | null {
     return null;
   }
 }
+function CollapsibleBody({
+  open,
+  children,
+  duration = 300,
+}: {
+  open: boolean;
+  children: React.ReactNode;
+  duration?: number;
+}) {
+  const measuredH = useSharedValue(0);
+  const progress = useSharedValue(open ? 1 : 0);
+
+  React.useEffect(() => {
+    progress.value = withTiming(open ? 1 : 0, {
+      duration,
+      easing: Easing.inOut(Easing.cubic),
+    });
+  }, [open, duration]);
+
+  const style = useAnimatedStyle(() => {
+    return {
+      height: measuredH.value * progress.value,
+      opacity: 0.2 + 0.8 * progress.value,
+      transform: [{ translateY: (1 - progress.value) * -6 }],
+    };
+  });
+
+  return (
+    <View style={{ position: "relative" }}>
+      
+      <View
+        pointerEvents="none"
+        style={{ position: "absolute", left: 0, right: 0, opacity: 0 }}
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          measuredH.value = Math.max(measuredH.value, h);
+        }}
+      >
+        {children}
+      </View>
+
+      
+      <Animated.View style={[{ overflow: "hidden" }, style]}>
+        <View>{children}</View>
+      </Animated.View>
+    </View>
+  );
+}
+
+
+
+
 function StatusPill({ status, c }: { status: string; c: any }) {
   const meta = useMemo(() => {
     if (status === "PENDING")
@@ -460,20 +512,12 @@ export default function BarberHome() {
               c={c}
             />
 
-            {openPending && (
+            <CollapsibleBody open={openPending} duration={300}>
               <View style={{ gap: 12 }}>
                 {pending.length === 0 ? (
-                  <Card
-                    bg={c.surfaceBg}
-                    border={c.surfaceBorder}
-                    shadowColor={c.shadowColor}
-                  >
+                  <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
                     <View className="p-4 flex-row items-center">
-                      <Ionicons
-                        name="checkmark-done-outline"
-                        size={18}
-                        color={c.textMuted}
-                      />
+                      <Ionicons name="checkmark-done-outline" size={18} color={c.textMuted} />
                       <Text className="ml-2" style={{ color: c.textMuted }}>
                         Onay bekleyen randevu yok.
                       </Text>
@@ -492,7 +536,8 @@ export default function BarberHome() {
                   ))
                 )}
               </View>
-            )}
+            </CollapsibleBody>
+
 
             {/* Collapsible: Tüm randevular */}
             <CollapsibleHeader
@@ -504,18 +549,12 @@ export default function BarberHome() {
               c={c}
             />
 
-            {openAll && (
+            <CollapsibleBody open={openAll} duration={300}>
               <View style={{ gap: 12, paddingBottom: 24 }}>
                 {all.length === 0 ? (
-                  <Card
-                    bg={c.surfaceBg}
-                    border={c.surfaceBorder}
-                    shadowColor={c.shadowColor}
-                  >
+                  <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
                     <View className="p-4">
-                      <Text style={{ color: c.textMuted }}>
-                        Henüz randevu yok.
-                      </Text>
+                      <Text style={{ color: c.textMuted }}>Henüz randevu yok.</Text>
                     </View>
                   </Card>
                 ) : (
@@ -531,7 +570,8 @@ export default function BarberHome() {
                   ))
                 )}
               </View>
-            )}
+            </CollapsibleBody>
+
           </View>
         </ScrollView>
       )}
