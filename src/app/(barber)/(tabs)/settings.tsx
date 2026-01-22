@@ -9,7 +9,6 @@ import { Text } from "@/components/ui/text";
 import { auth } from "@/src/lib/firebase";
 import { logout } from "@/src/services/auth.service";
 
-
 import { useAppAlert } from "@/src/components/AppAlertProvider";
 import Card from "@/src/components/Card";
 import { BarberDoc } from "@/src/services/barbers.service";
@@ -264,7 +263,7 @@ export default function BarberSettings() {
             icon="time-outline"
             title="Çalışma Saatleri"
             subtitle="Açılış/kapanış ve slot aralığı"
-            onPress={() => router.push("/(barber)/working-hours")}
+            onPress={() => router.push("/(barber)/(tabs)/working-hours")}
             textColor={c.text}
             mutedColor={c.textMuted}
             dividerColor={c.divider}

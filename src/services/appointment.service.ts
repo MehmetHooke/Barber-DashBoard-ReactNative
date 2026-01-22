@@ -30,6 +30,11 @@ type BarberSnapshot = {
   imageUrl?: string;
 };
 
+type UserSnapshot = {
+  name: string;
+  surname: string;
+};
+
 export type CreateAppointmentInput = {
   shopId: string;
   userId: string;
@@ -37,6 +42,8 @@ export type CreateAppointmentInput = {
   serviceId: string;
   serviceSnapshot: ServiceSnapshot;
   barberSnapshot: BarberSnapshot;
+
+  userSnapshot: UserSnapshot;
 
   startAt: Date;
   endAt: Date;
@@ -119,6 +126,8 @@ export async function createAppointment(input: CreateAppointmentInput) {
     serviceSnapshot: input.serviceSnapshot,
     barberSnapshot: input.barberSnapshot,
 
+    userSnapshot: input.userSnapshot,
+
     startAt: Timestamp.fromDate(input.startAt),
     endAt: Timestamp.fromDate(input.endAt),
 
@@ -142,6 +151,8 @@ export async function createAppointment(input: CreateAppointmentInput) {
     startAt: Timestamp.fromDate(input.startAt),
     endAt: Timestamp.fromDate(input.endAt),
 
+    userSnapshot: input.userSnapshot,
+
     status,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -161,6 +172,8 @@ export async function createAppointment(input: CreateAppointmentInput) {
 
       startAt: Timestamp.fromDate(input.startAt),
       endAt: Timestamp.fromDate(input.endAt),
+
+      userSnapshot: input.userSnapshot,
 
       status,
       createdAt: serverTimestamp(),
@@ -300,7 +313,7 @@ export async function cancelAppointment(args: {
   barberId: string;
 }) {
   const payload = {
-    status: "CANCELLED" as AppointmentStatus,
+    status: "CANCELED" as AppointmentStatus,
     updatedAt: serverTimestamp(),
   };
 

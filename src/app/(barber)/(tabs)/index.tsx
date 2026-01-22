@@ -1,47 +1,32 @@
+// app/(barber)/home/index.tsx  (örnek path)
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import Card from "@/src/components/Card";
-import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
-import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, View } from "react-native";
+import { useAppTheme } from "@/src/theme/ThemeProvider";
 
 import {
-  AppointmentDoc,
+  AppointmentItem,
   cancelAppointment,
   confirmAppointment,
-  listMyAppointments,
+  subscribeMyAppointments,
+  subscribeMyPendingAppointments,
+  subscribeMyTodayAppointments,
 } from "@/src/services/berbersAppointment.service";
-
-type Item = { id: string } & AppointmentDoc;
 
 function toDate(ts: any): Date | null {
   try {
-    // Firestore Timestamp: ts.toDate()
     if (!ts) return null;
     if (typeof ts?.toDate === "function") return ts.toDate();
-    // bazen plain date gelirse
     return new Date(ts);
   } catch {
     return null;
   }
 }
-
-function fmtDateTimeTR(d: Date | null) {
-  if (!d) return "";
-  const date = d.toLocaleDateString("tr-TR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-  const time = d.toLocaleTimeString("tr-TR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return `${date} • ${time}`;
-}
-
 function StatusPill({ status, c }: { status: string; c: any }) {
   const meta = useMemo(() => {
     if (status === "PENDING")
@@ -87,25 +72,98 @@ function StatusPill({ status, c }: { status: string; c: any }) {
   );
 }
 
+function fmtDateTimeTR(d: Date | null) {
+  if (!d) return "";
+  const date = d.toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "short",
+  });
+  const time = d.toLocaleTimeString("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${date} • ${time}`;
+}
+
+function CollapsibleHeader({
+  title,
+  count,
+  open,
+  onToggle,
+  c,
+  subtitle,
+}: {
+  title: string;
+  count: number;
+  open: boolean;
+  onToggle: () => void;
+  c: any;
+  subtitle?: string;
+}) {
+  return (
+    <Pressable onPress={onToggle}>
+      <Card
+        bg={c.surfaceBg}
+        border={c.surfaceBorder}
+        shadowColor={c.shadowColor}
+      >
+        <View className="p-4 flex-row items-center justify-between">
+          <View className="flex-1 pr-2">
+            <Text className="text-base font-bold" style={{ color: c.text }}>
+              {title}
+            </Text>
+            {!!subtitle && (
+              <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
+                {subtitle}
+              </Text>
+            )}
+          </View>
+
+          <View className="flex-row items-center gap-2">
+            <View
+              className="px-2 py-1 rounded-full border"
+              style={{
+                borderColor: c.surfaceBorder,
+                backgroundColor: c.cardBg,
+              }}
+            >
+              <Text
+                className="text-xs font-semibold"
+                style={{ color: c.textMuted }}
+              >
+                {count}
+              </Text>
+            </View>
+            <Ionicons
+              name={open ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={c.textMuted}
+            />
+          </View>
+        </View>
+      </Card>
+    </Pressable>
+  );
+}
+
 function AppointmentCard({
   item,
   c,
+  busy,
   onConfirm,
   onCancel,
-  busy,
 }: {
-  item: Item;
+  item: AppointmentItem;
   c: any;
+  busy: boolean;
   onConfirm: () => void;
   onCancel: () => void;
-  busy: boolean;
 }) {
   const serviceName = item.serviceSnapshot?.name ?? "Hizmet";
   const when = fmtDateTimeTR(toDate(item.startAt));
   const customer =
     `${item.userSnapshot?.name ?? ""} ${item.userSnapshot?.surname ?? ""}`.trim() ||
     "Müşteri";
-
   const isPending = item.status === "PENDING";
 
   return (
@@ -120,11 +178,9 @@ function AppointmentCard({
             >
               {serviceName}
             </Text>
-
             <Text className="text-sm mt-1" style={{ color: c.textMuted }}>
               {when}
             </Text>
-
             <Text className="text-sm mt-1" style={{ color: c.text }}>
               {customer}
             </Text>
@@ -133,7 +189,6 @@ function AppointmentCard({
           <StatusPill status={item.status} c={c} />
         </View>
 
-        {/* Actions */}
         <View className="flex-row gap-2 mt-4">
           <Button
             onPress={onConfirm}
@@ -167,43 +222,85 @@ function AppointmentCard({
   );
 }
 
+function StatTile({
+  label,
+  value,
+  c,
+}: {
+  label: string;
+  value: string;
+  c: any;
+}) {
+  return (
+    <View className="flex-1">
+      <Card
+        bg={c.surfaceBg}
+        border={c.surfaceBorder}
+        shadowColor={c.shadowColor}
+      >
+        <View className="p-3">
+          <Text
+            className="text-xs font-semibold"
+            style={{ color: c.textMuted }}
+          >
+            {label}
+          </Text>
+          <Text className="text-lg font-bold mt-1" style={{ color: c.text }}>
+            {value}
+          </Text>
+        </View>
+      </Card>
+    </View>
+  );
+}
+
 export default function BarberHome() {
   const { effectiveTheme } = useAppTheme();
   const c = colors[effectiveTheme];
 
   const [loading, setLoading] = useState(true);
-  const [pending, setPending] = useState<Item[]>([]);
-  const [all, setAll] = useState<Item[]>([]);
+
+  const [pending, setPending] = useState<AppointmentItem[]>([]);
+  const [all, setAll] = useState<AppointmentItem[]>([]);
+  const [today, setToday] = useState<AppointmentItem[]>([]);
+
+  const [openPending, setOpenPending] = useState(true);
+  const [openAll, setOpenAll] = useState(false);
+
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  async function load() {
-    setLoading(true);
-    try {
-      const [p, a] = await Promise.all([
-        listMyAppointments({ status: "PENDING", pageSize: 20 }),
-        listMyAppointments({ pageSize: 50 }),
-      ]);
-      setPending(p as any);
-      setAll(a as any);
-    } finally {
-      setLoading(false);
-    }
-  }
-
+  // Realtime subscriptions
   useEffect(() => {
-    load();
+    setLoading(true);
+
+    const unsub1 = subscribeMyPendingAppointments(
+      (items) => setPending(items),
+      { pageSize: 30 },
+    );
+    const unsub2 = subscribeMyAppointments((items) => setAll(items), {
+      pageSize: 80,
+    });
+    const unsub3 = subscribeMyTodayAppointments((items) => setToday(items), {
+      pageSize: 80,
+    });
+
+    // İlk snapshot gelince loading false yapmak için basit yaklaşım:
+    // Burada “ilk setState” anını yakalamak için flag kullanıyoruz.
+    let t = setTimeout(() => setLoading(false), 400);
+
+    return () => {
+      clearTimeout(t);
+      unsub1();
+      unsub2();
+      unsub3();
+    };
   }, []);
 
   async function onConfirm(id: string) {
     try {
       setBusyId(id);
       await confirmAppointment(id);
-
-      // hızlı UI güncelle (optimistic)
-      setPending((x) => x.filter((i) => i.id !== id));
-      setAll((x) =>
-        x.map((i) => (i.id === id ? { ...i, status: "CONFIRMED" } : i)),
-      );
+      // realtime zaten güncelleyecek. ekstra local manipülasyona gerek yok.
     } finally {
       setBusyId(null);
     }
@@ -213,82 +310,177 @@ export default function BarberHome() {
     try {
       setBusyId(id);
       await cancelAppointment(id);
-
-      setPending((x) => x.filter((i) => i.id !== id));
-      setAll((x) =>
-        x.map((i) => (i.id === id ? { ...i, status: "CANCELED" } : i)),
-      );
     } finally {
       setBusyId(null);
     }
   }
 
-  const data = useMemo(() => {
-    // pending en üstte ayrı section gibi davranacağız: FlatList header kullan
-    return all;
-  }, [all]);
+  // Gün özeti hesapları (client-side)
+  const summary = useMemo(() => {
+    const now = new Date();
+
+    const notCanceled = today.filter((a) => a.status !== "CANCELED");
+
+    const done = notCanceled.filter((a) => {
+      const d = toDate(a.startAt);
+      if (!d) return false;
+      // "yapıldı" için en mantıklı: CONFIRMED ve startAt geçmişte
+      return a.status === "CONFIRMED" && d.getTime() < now.getTime();
+    });
+
+    const remaining = notCanceled.filter((a) => {
+      const d = toDate(a.startAt);
+      if (!d) return false;
+      // kalan: şimdi ve sonrası, pending/confirmed olabilir ama iptal değil
+      return d.getTime() >= now.getTime();
+    });
+
+    const next = remaining
+      .slice()
+      .sort(
+        (x, y) =>
+          (toDate(x.startAt)?.getTime() ?? 0) -
+          (toDate(y.startAt)?.getTime() ?? 0),
+      )[0];
+
+    return {
+      doneCount: done.length,
+      remainingCount: remaining.length,
+      pendingCount: pending.length,
+      next,
+    };
+  }, [today, pending]);
 
   return (
     <View style={{ flex: 1, backgroundColor: c.screenBg }}>
+      <View className="px-4 pt-4 pb-3 mt-10">
+        <Text className="text-2xl font-bold" style={{ color: c.text }}>
+          Bugün
+        </Text>
+        <Text className="text-sm mt-1" style={{ color: c.textMuted }}>
+          Randevularını hızlıca yönet.
+        </Text>
+      </View>
+
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
           <Text className="mt-2" style={{ color: c.textMuted }}>
-            Randevular yükleniyor...
+            Yükleniyor...
           </Text>
         </View>
       ) : (
-        <FlatList
-          contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
-          data={data}
-          keyExtractor={(item) => item.id}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          refreshing={loading}
-          onRefresh={load}
-          ListHeaderComponent={
-            <View>
-              {/* ÜST BLOK: PENDING */}
-              <View className="flex-row mt-10 px-4 pt-5 pb-2 items-center justify-between mb-3">
-                <Text className="text-2xl font-bold" style={{ color: c.text }}>
-                  Onay Bekleyenler
-                </Text>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="px-4" style={{ gap: 14 }}>
+            {/* Günün özeti tiles */}
+            <View className="flex-row" style={{ gap: 12 }}>
+              <StatTile
+                label="Bugün yapıldı"
+                value={`${summary.doneCount}`}
+                c={c}
+              />
+              <StatTile
+                label="Kalan"
+                value={`${summary.remainingCount}`}
+                c={c}
+              />
+            </View>
+            <View className="flex-row" style={{ gap: 10 }}>
+              <StatTile
+                label="Onay bekleyen"
+                value={`${summary.pendingCount}`}
+                c={c}
+              />
+              <StatTile
+                label="Toplam (bugün)"
+                value={`${today.length}`}
+                c={c}
+              />
+            </View>
 
-                <View
-                  className="px-2 py-1 rounded-full border"
-                  style={{
-                    borderColor: c.surfaceBorder,
-                    backgroundColor: c.cardBg,
-                  }}
-                >
+            {/* Sıradaki randevu */}
+            <Card
+              bg={c.surfaceBg}
+              border={c.surfaceBorder}
+              shadowColor={c.shadowColor}
+            >
+              <View className="p-4">
+                <View className="flex-row items-center justify-between">
                   <Text
-                    className="text-xs font-semibold"
-                    style={{ color: c.textMuted }}
+                    className="text-base font-bold"
+                    style={{ color: c.text }}
                   >
-                    {pending.length}
+                    Sıradaki Randevu
                   </Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={18}
+                    color={c.textMuted}
+                  />
                 </View>
-              </View>
 
-              {pending.length === 0 ? (
-                <Card
-                  bg={c.surfaceBg}
-                  border={c.surfaceBorder}
-                  shadowColor={c.shadowColor}
-                >
-                  <View className="p-4 flex-row items-center">
-                    <Ionicons
-                      name="checkmark-done-outline"
-                      size={18}
-                      color={c.textMuted}
-                    />
-                    <Text className="ml-2" style={{ color: c.textMuted }}>
-                      Onay bekleyen randevu yok.
+                {summary.next ? (
+                  <View className="mt-2">
+                    <Text
+                      className="text-sm font-semibold"
+                      style={{ color: c.text }}
+                    >
+                      {summary.next.serviceSnapshot?.name ?? "Hizmet"}
+                    </Text>
+                    <Text
+                      className="text-sm mt-1"
+                      style={{ color: c.textMuted }}
+                    >
+                      {fmtDateTimeTR(toDate(summary.next.startAt))}
+                    </Text>
+                    <Text className="text-sm mt-1" style={{ color: c.text }}>
+                      {`${summary.next.userSnapshot?.name ?? ""} ${summary.next.userSnapshot?.surname ?? ""}`.trim() ||
+                        "Müşteri"}
                     </Text>
                   </View>
-                </Card>
-              ) : (
-                <View style={{ gap: 12 }}>
-                  {pending.map((item) => (
+                ) : (
+                  <Text className="text-sm mt-2" style={{ color: c.textMuted }}>
+                    Bugün sıradaki randevu yok.
+                  </Text>
+                )}
+              </View>
+            </Card>
+
+            {/* Collapsible: Onay Bekleyen */}
+            <CollapsibleHeader
+              title="Onay Bekleyenler"
+              subtitle="Yeni gelen randevular burada görünür"
+              count={pending.length}
+              open={openPending}
+              onToggle={() => setOpenPending((v) => !v)}
+              c={c}
+            />
+
+            {openPending && (
+              <View style={{ gap: 12 }}>
+                {pending.length === 0 ? (
+                  <Card
+                    bg={c.surfaceBg}
+                    border={c.surfaceBorder}
+                    shadowColor={c.shadowColor}
+                  >
+                    <View className="p-4 flex-row items-center">
+                      <Ionicons
+                        name="checkmark-done-outline"
+                        size={18}
+                        color={c.textMuted}
+                      />
+                      <Text className="ml-2" style={{ color: c.textMuted }}>
+                        Onay bekleyen randevu yok.
+                      </Text>
+                    </View>
+                  </Card>
+                ) : (
+                  pending.map((item) => (
                     <AppointmentCard
                       key={item.id}
                       item={item}
@@ -297,28 +489,51 @@ export default function BarberHome() {
                       onConfirm={() => onConfirm(item.id)}
                       onCancel={() => onCancel(item.id)}
                     />
-                  ))}
-                </View>
-              )}
-
-              {/* ALT BAŞLIK */}
-              <View className="mt-6 mb-3 flex-row items-center justify-between">
-                <Text className="text-2xl font-bold" style={{ color: c.text }}>
-                  Tüm Randevular
-                </Text>
+                  ))
+                )}
               </View>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <AppointmentCard
-              item={item}
+            )}
+
+            {/* Collapsible: Tüm randevular */}
+            <CollapsibleHeader
+              title="Randevular"
+              subtitle="Burada tüm randevularını görebilirsin."
+              count={all.length}
+              open={openAll}
+              onToggle={() => setOpenAll((v) => !v)}
               c={c}
-              busy={busyId === item.id}
-              onConfirm={() => onConfirm(item.id)}
-              onCancel={() => onCancel(item.id)}
             />
-          )}
-        />
+
+            {openAll && (
+              <View style={{ gap: 12, paddingBottom: 24 }}>
+                {all.length === 0 ? (
+                  <Card
+                    bg={c.surfaceBg}
+                    border={c.surfaceBorder}
+                    shadowColor={c.shadowColor}
+                  >
+                    <View className="p-4">
+                      <Text style={{ color: c.textMuted }}>
+                        Henüz randevu yok.
+                      </Text>
+                    </View>
+                  </Card>
+                ) : (
+                  all.map((item) => (
+                    <AppointmentCard
+                      key={item.id}
+                      item={item}
+                      c={c}
+                      busy={busyId === item.id}
+                      onConfirm={() => onConfirm(item.id)}
+                      onCancel={() => onCancel(item.id)}
+                    />
+                  ))
+                )}
+              </View>
+            )}
+          </View>
+        </ScrollView>
       )}
     </View>
   );

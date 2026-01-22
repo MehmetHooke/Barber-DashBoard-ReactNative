@@ -17,6 +17,7 @@ import {
   getServiceById,
   type ServiceDoc,
 } from "@/src/services/services.service";
+import { getUserDoc } from "@/src/services/user.service";
 
 type BarberDocLite = {
   id: string;
@@ -86,6 +87,10 @@ export default function Confirm() {
 
   const [saving, setSaving] = useState(false);
 
+  const [user, setUser] = useState<{ name: string; surname: string } | null>(
+    null,
+  );
+
   // ✅ Firestore’dan service + barber çek
   useEffect(() => {
     (async () => {
@@ -95,12 +100,15 @@ export default function Confirm() {
         if (!serviceId || !barberId) {
           setService(null);
           setBarber(null);
+          setUser(null);
           return;
         }
+        const uid = auth.currentUser?.uid;
 
-        const [svc, brb] = await Promise.all([
+        const [svc, brb, userDoc] = await Promise.all([
           getServiceById(serviceId),
           getBarberById(barberId),
+          uid ? getUserDoc(uid) : Promise.resolve(null),
         ]);
 
         setService(svc);
@@ -117,6 +125,12 @@ export default function Confirm() {
               }
             : null,
         );
+
+        setUser(
+          userDoc
+            ? { name: userDoc.name ?? "", surname: userDoc.surname ?? "" }
+            : null,
+        );
       } catch (e: any) {
         alert("Hata", "Randevu bilgileri yüklenemedi.");
         setService(null);
@@ -129,8 +143,16 @@ export default function Confirm() {
 
   // ✅ Valid kontrol: id’ler + time + doc’lar
   const invalid = useMemo(() => {
-    return !serviceId || !barberId || !startAt || !endAt || !service || !barber;
-  }, [serviceId, barberId, startAt, endAt, service, barber]);
+    return (
+      !serviceId ||
+      !barberId ||
+      !startAt ||
+      !endAt ||
+      !service ||
+      !barber ||
+      !user
+    );
+  }, [serviceId, barberId, startAt, endAt, service, barber, user]);
 
   const { alert, confirm } = useAppAlert();
 
@@ -181,6 +203,7 @@ export default function Confirm() {
           name: barber!.name,
           imageUrl: barber!.imageUrl,
         },
+        userSnapshot: { name: user!.name, surname: user!.surname },
         startAt: startAt!,
         endAt: endAt!,
         status: "PENDING",
@@ -192,7 +215,7 @@ export default function Confirm() {
           text: "Tamam",
           onPress: () => {
             // ✅ Akışı temiz başlat: book root’a dön (param yok)
-            router.replace({ pathname: "/(user)/book", params: {} });
+            router.replace({ pathname: "/(user)/(tabs)/book", params: {} });
 
             // Eğer direkt ana sayfaya dönmek istiyorsan:
             // router.replace("/(user)");
@@ -342,7 +365,7 @@ export default function Confirm() {
 
           <Pressable
             disabled={saving}
-            onPress={() => router.replace("/(user)")}
+            onPress={() => router.replace("/(user)/(tabs)")}
           >
             <View
               className="rounded-2xl py-4 items-center justify-center border"

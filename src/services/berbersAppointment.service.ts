@@ -3,11 +3,12 @@ import { auth, db } from "@/src/lib/firebase";
 import {
     collection,
     doc,
-    getDocs,
     limit,
+    onSnapshot,
     orderBy,
     query,
     serverTimestamp,
+    Timestamp,
     updateDoc,
     where,
 } from "firebase/firestore";
@@ -29,7 +30,7 @@ export type AppointmentDoc = {
   status: AppointmentStatus;
 
   startAt: any; // Firestore Timestamp
-  endAt: any; // Firestore Timestamp
+  endAt: any;
   createdAt: any;
   updatedAt: any;
 
@@ -41,37 +42,92 @@ export type AppointmentDoc = {
     imageUrl?: string;
   };
 
-  // varsa çok iyi (yoksa UI'da userId üzerinden çekersin)
   userSnapshot?: {
     name?: string;
     surname?: string;
-    phone?: string;
+  };
+
+  barberSnapshot?: {
+    name?: string;
+    imageUrl?: string;
   };
 };
 
+export type AppointmentItem = { id: string } & AppointmentDoc;
+
 const COL = "appointments";
 
-export async function listMyAppointments(params?: {
-  status?: AppointmentStatus;
-  pageSize?: number;
-}) {
-  const uid = requireUid();
-  const pageSize = params?.pageSize ?? 30;
-
-  const base = [
-    where("barberId", "==", uid),
-    ...(params?.status ? [where("status", "==", params.status)] : []),
-    orderBy("startAt", "desc" as const), // yeni -> eski
-    limit(pageSize),
-  ];
-
-  const q = query(collection(db, COL), ...base);
-  const snap = await getDocs(q);
-
-  return snap.docs.map((d) => ({
+function mapSnap(snap: any): AppointmentItem[] {
+  return snap.docs.map((d: any) => ({
     id: d.id,
     ...(d.data() as AppointmentDoc),
   }));
+}
+
+export function subscribeMyPendingAppointments(
+  cb: (items: AppointmentItem[]) => void,
+  opts?: { pageSize?: number },
+) {
+  const uid = requireUid();
+  const pageSize = opts?.pageSize ?? 30;
+
+  // PENDING: en çok yeni gelenler önemli (createdAt desc ideal)
+  // Eğer createdAt yoksa startAt desc kullanırız.
+  const q = query(
+    collection(db, COL),
+    where("barberId", "==", uid),
+    where("status", "==", "PENDING"),
+    orderBy("createdAt", "desc"),
+    limit(pageSize),
+  );
+
+  return onSnapshot(q, (snap) => cb(mapSnap(snap)));
+}
+
+export function subscribeMyAppointments(
+  cb: (items: AppointmentItem[]) => void,
+  opts?: { pageSize?: number },
+) {
+  const uid = requireUid();
+  const pageSize = opts?.pageSize ?? 80;
+
+  const q = query(
+    collection(db, COL),
+    where("barberId", "==", uid),
+    orderBy("startAt", "desc"),
+    limit(pageSize),
+  );
+
+  return onSnapshot(q, (snap) => cb(mapSnap(snap)));
+}
+
+export function subscribeMyTodayAppointments(
+  cb: (items: AppointmentItem[]) => void,
+  opts?: { pageSize?: number; tzOffsetMinutes?: number },
+) {
+  const uid = requireUid();
+  const pageSize = opts?.pageSize ?? 80;
+
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+
+  const startTs = Timestamp.fromDate(start);
+  const endTs = Timestamp.fromDate(end);
+
+  const q = query(
+    collection(db, COL),
+    where("barberId", "==", uid),
+    where("startAt", ">=", startTs),
+    where("startAt", "<=", endTs),
+    orderBy("startAt", "asc"),
+    limit(pageSize),
+  );
+
+  return onSnapshot(q, (snap) => cb(mapSnap(snap)));
 }
 
 export async function setAppointmentStatus(
@@ -79,10 +135,7 @@ export async function setAppointmentStatus(
   status: AppointmentStatus,
 ) {
   const refDoc = doc(db, COL, appointmentId);
-  await updateDoc(refDoc, {
-    status,
-    updatedAt: serverTimestamp(),
-  });
+  await updateDoc(refDoc, { status, updatedAt: serverTimestamp() });
 }
 
 export async function confirmAppointment(appointmentId: string) {
