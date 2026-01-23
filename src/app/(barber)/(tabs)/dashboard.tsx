@@ -71,6 +71,7 @@ function dateKey(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
+
 function formatLabelTR(d: Date) {
   // "23 Oca" gibi
   return new Intl.DateTimeFormat("tr-TR", {
@@ -216,6 +217,8 @@ async function fetchDashboardForBarber(args: {
 
   const snap = await getDocs(q);
 
+
+
   const pieStatus: Record<AppointmentStatus, number> = {
     PENDING: 0,
     CONFIRMED: 0,
@@ -263,6 +266,7 @@ async function fetchDashboardForBarber(args: {
     });
   }
 
+
   // today seçiliyse tek nokta kalsın
   const finalChart = args.range === "today" ? chartData.slice(-1) : chartData;
 
@@ -288,6 +292,25 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [state, setState] = useState<DashboardState>(INITIAL_STATE);
+  const [chartW, setChartW] = useState<number>(0);
+  const [forceTick, setForceTick] = useState(0);
+
+  function downsampleLabels(data: { label: string; value: number }[], range: Range) {
+    if (range !== "30d") return data;
+
+    const step = 5;
+    return data.map((p, i) => ({
+      ...p,
+
+      label: i % step === 0 || i === data.length - 1 ? p.label : " ",
+    }));
+  }
+
+  useEffect(() => {
+    setChartW(0);
+    const id = requestAnimationFrame(() => setForceTick((x) => x + 1));
+    return () => cancelAnimationFrame(id);
+  }, [range]);
 
   const load = useCallback(
     async (mode: "initial" | "refresh" = "initial") => {
@@ -423,39 +446,52 @@ export default function Dashboard() {
 
             {/* Line Chart */}
             <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
-              <View className="p-4" onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+              <View
+                className="p-4"
+                onLayout={(e) => {
+                  const full = e.nativeEvent.layout.width;
+                  const innerPadding = 32;
+                  const yAxisLabelWidth = 44;
+                  const cw = Math.max(0, full - innerPadding - yAxisLabelWidth);
+                  setChartW(cw);
+                }}
+              >
                 <Text className="text-base font-bold" style={{ color: c.text }}>
                   Gelir Trendi
                 </Text>
                 <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
-                  {rangeTitle} (COMPLETED)
+                  {rangeTitle}
                 </Text>
 
                 <View style={{ height: 12 }} />
 
-                <View onLayout={(e) => setW(e.nativeEvent.layout.width)} style={{ width: "100%" }}>
-                  {chartWidth > 0 && (
+                {/* ✅ sabit yükseklikli container */}
+                <View style={{ width: "100%", height: 250 }}>
+                  {chartW > 0 && (
                     <LineChart
-                      data={state.chartData.map((x) => ({ value: x.value, label: x.label }))}
-                      width={chartWidth}
-                      height={220}
+                      key={`${range}-${chartW}-${state.chartData.length}-${forceTick}`}
+                      data={downsampleLabels(
+                        state.chartData.map((x) => ({ value: x.value, label: x.label })),
+                        range
+                      )}
+                      width={chartW}
+                      height={200}
                       areaChart
                       curved
                       hideRules
-                      yAxisLabelWidth={yAxisLabelWidth}
+                      yAxisLabelWidth={44}
                       yAxisThickness={0}
+                      hideDataPoints={range === "30d"}
                       xAxisThickness={0}
                       showVerticalLines={false}
                       initialSpacing={0}
                       endSpacing={0}
                       spacing={
                         state.chartData.length > 1
-                          ? Math.max(1, chartWidth / (state.chartData.length - 1))
-                          : chartWidth
+                          ? Math.max(1, chartW / (state.chartData.length - 1))
+                          : chartW
                       }
-                      isAnimated
-                      animationDuration={700}
-                      xAxisLabelsHeight={18}
+                      xAxisLabelsHeight={range === "30d" ? 0 : 18}
                       xAxisLabelTextStyle={{ color: c.text, fontSize: 11 }}
                       yAxisTextStyle={{ color: c.text, fontSize: 11 }}
                       color={c.accent}
@@ -464,41 +500,30 @@ export default function Dashboard() {
                       endFillColor={c.accent}
                       startOpacity={0.18}
                       endOpacity={0.02}
-                      pointerConfig={{
-                        activatePointersOnLongPress: false,
-                        autoAdjustPointerLabelPosition: true,
-                        pointerStripUptoDataPoint: true,
-                        pointerStripHeight: 220,
-                        pointerStripColor: c.surfaceBorder,
-                        pointerStripWidth: 2,
-                        pointerColor: c.accent,
-                        radius: 4,
-                        pointerLabelWidth: 160,
-                        pointerLabelHeight: 40,
-                        pointerLabelComponent: (items: { value: number; label?: string }[]) => {
-                          const item = items?.[0];
-                          if (!item) return null;
+                    />)
 
-                          return (
-                            <View
-                              style={{
-                                paddingVertical: 6,
-                                paddingHorizontal: 10,
-                                borderRadius: 12,
-                                borderWidth: 1,
-                                borderColor: c.surfaceBorder,
-                                backgroundColor: c.surfaceBg,
-                              }}
-                            >
-                              <Text style={{ color: c.text, fontWeight: "700" }}>
-                                {item.label ? `${item.label}: ` : ""}
-                                {currencyTRY(Number(item.value))}
-                              </Text>
-                            </View>
-                          );
-                        },
+                  }
+                  {range === "30d" && state.chartData.length > 0 && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        paddingHorizontal: 4,
+                        marginTop: 8,
                       }}
-                    />
+                    >
+                      <Text style={{ color: c.textMuted, fontSize: 11 }}>
+                        {state.chartData[0]?.label}
+                      </Text>
+
+                      <Text style={{ color: c.textMuted, fontSize: 11 }}>
+                        {state.chartData[Math.floor(state.chartData.length / 2)]?.label}
+                      </Text>
+
+                      <Text style={{ color: c.textMuted, fontSize: 11 }}>
+                        {state.chartData[state.chartData.length - 1]?.label}
+                      </Text>
+                    </View>
                   )}
                 </View>
               </View>
@@ -523,11 +548,26 @@ export default function Dashboard() {
                     data={pieData}
                     donut
                     radius={92}
-                    innerRadius={70}
+                    innerRadius={50}
                     showText={false}
                     strokeColor={c.cardBg}
                     strokeWidth={10}
                     focusOnPress
+                    centerLabelComponent={() => (
+                      <View
+                        style={{
+                          width: 2 * 60,       // innerRadius * 2
+                          height: 2 * 60,      // innerRadius * 2
+                          borderRadius: 60,
+                          backgroundColor: c.surfaceBg, // ✅ merkez rengi burada
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {/* istersen merkezde text */}
+                        {/* <Text style={{ color: c.text, fontWeight: "700" }}>Toplam</Text> */}
+                      </View>
+                    )}
                   />
 
                   <View style={{ flex: 1, gap: 10 }}>
