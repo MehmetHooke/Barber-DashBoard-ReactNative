@@ -418,6 +418,7 @@ export default function ServicesManage() {
                 subtitle={`${item.durationMin} dk • ${item.price} ₺`}
                 open={open}
                 onToggle={() => toggle(item.id)}
+                leading={<ServiceThumb uri={item.imageUrl ?? null} c={c} />} 
               >
                 {/* draft yoksa ilk açılışta init ediliyor; ama güvenli olsun diye fallback */}
                 <ServiceForm
@@ -536,6 +537,7 @@ function AnimatedAccordionCard({
   open,
   onToggle,
   children,
+  leading, // ✅ yeni
 }: {
   c: any;
   title: string;
@@ -543,11 +545,11 @@ function AnimatedAccordionCard({
   open: boolean;
   onToggle: () => void;
   children: React.ReactNode;
+  leading?: React.ReactNode; // ✅ yeni
 }) {
   const measuredH = useSharedValue(0);
   const progress = useSharedValue(open ? 1 : 0);
 
-  // open değişince animasyon
   React.useEffect(() => {
     progress.value = withTiming(open ? 1 : 0, {
       duration: 300,
@@ -555,36 +557,31 @@ function AnimatedAccordionCard({
     });
   }, [open]);
 
-  const bodyStyle = useAnimatedStyle(() => {
-    return {
-      height: measuredH.value * progress.value,
-      opacity: 0.25 + 0.75 * progress.value,
-      transform: [{ translateY: (1 - progress.value) * -8 }],
-    };
-  });
+  const bodyStyle = useAnimatedStyle(() => ({
+    height: measuredH.value * progress.value,
+    opacity: 0.25 + 0.75 * progress.value,
+    transform: [{ translateY: (1 - progress.value) * -8 }],
+  }));
 
   return (
     <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
       <Pressable onPress={onToggle}>
         <View className="px-4 py-4 flex-row items-center justify-between">
-          <View style={{ flex: 1, paddingRight: 12 }}>
-            <Text
-              className="text-base font-bold"
-              style={{ color: c.text }}
-              numberOfLines={1}
-            >
-              {title}
-            </Text>
+          {/* ✅ Sol: thumb + title/subtitle */}
+          <View style={{ flex: 1, paddingRight: 12, flexDirection: "row", alignItems: "center" }}>
+            {!!leading && <View style={{ marginRight: 12 }}>{leading}</View>}
 
-            {!!subtitle && (
-              <Text
-                className="mt-1 text-xs"
-                style={{ color: c.textMuted }}
-                numberOfLines={1}
-              >
-                {subtitle}
+            <View style={{ flex: 1 }}>
+              <Text className="text-base font-bold" style={{ color: c.text }} numberOfLines={1}>
+                {title}
               </Text>
-            )}
+
+              {!!subtitle && (
+                <Text className="mt-1 text-xs" style={{ color: c.textMuted }} numberOfLines={1}>
+                  {subtitle}
+                </Text>
+              )}
+            </View>
           </View>
 
           <Text className="text-sm font-semibold" style={{ color: c.accent }}>
@@ -593,14 +590,11 @@ function AnimatedAccordionCard({
         </View>
       </Pressable>
 
-      {/* Animated Body */}
       <Animated.View style={[{ overflow: "hidden" }, bodyStyle]}>
-        {/* Measure Wrapper */}
         <View
           className="px-4 pb-4"
           onLayout={(e) => {
             const h = e.nativeEvent.layout.height;
-            // FlatList içinde bazen 0 gelebiliyor, güvenli set:
             measuredH.value = Math.max(measuredH.value, h);
           }}
         >
@@ -781,6 +775,48 @@ function Field({
           color: c.text,
           backgroundColor: "transparent",
         }}
+      />
+    </View>
+  );
+}
+
+
+function ServiceThumb({ uri, c }: { uri?: string | null; c: any }) {
+  if (!uri) {
+    return (
+      <View
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: c.surfaceBorder,
+          backgroundColor: "rgba(0,0,0,0.04)",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text style={{ color: c.textMuted, fontWeight: "700" }}>B</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View
+      style={{
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: c.surfaceBorder,
+        backgroundColor: "rgba(0,0,0,0.04)",
+      }}
+    >
+      <Image
+        source={{ uri }}
+        style={{ width: "100%", height: "100%" }}
+        resizeMode="cover"
       />
     </View>
   );

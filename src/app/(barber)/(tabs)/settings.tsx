@@ -199,7 +199,7 @@ export default function BarberSettings() {
   return (
     <View className="flex-1 pt-10" style={{ backgroundColor: c.screenBg }}>
       {/* Header */}
-      <View className="px-4 pt-5 pb-3">
+      <View className="px-3 pt-10 pb-3">
         <Text className="text-2xl font-bold" style={{ color: c.text }}>
           Ayarlar
         </Text>

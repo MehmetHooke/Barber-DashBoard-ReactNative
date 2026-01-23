@@ -159,16 +159,16 @@ export default function DashboardDemo() {
   return (
     <View style={{ flex: 1, backgroundColor: c.screenBg }}>
       <View className="px-4 pt-10 pb-3">
-        <Text className="text-2xl font-bold" style={{ color: c.text }}>
+        <Text className="text-2xl pt-10 font-bold" style={{ color: c.text }}>
           Dashboard (Demo)
         </Text>
-        <Text className="mt-1" style={{ color: c.textMuted }}>
+        <Text className="mt-1 pl-2" style={{ color: c.textMuted }}>
           KPI + Gelir Grafiği + Durum Dağılımı
         </Text>
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+        contentContainerStyle={{ paddingTop: 10, paddingHorizontal: 16, paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       >
         <Segment value={range} onChange={setRange} c={c} />
@@ -208,74 +208,87 @@ export default function DashboardDemo() {
               {range === "today" ? "Bugün" : range === "7d" ? "Son 7 gün" : "Son 30 gün"} (demo)
             </Text>
 
-            <View onLayout={(e) => setW(e.nativeEvent.layout.width)}
-              style={{ height: 12 }} />
+            <View style={{ height: 12 }} />
 
-            <LineChart
-              data={chartData}
-              height={220}
-              areaChart
-              curved
-              hideRules
+            {/* ✅ Chart wrapper: gerçek genişliği buradan ölç */}
+            <View
+              onLayout={(e) => setW(e.nativeEvent.layout.width)}
+              style={{ width: "100%" }}
+            >
+              {chartWidth > 0 && (
+                <LineChart
+                  data={chartData.map((x) => ({ value: x.value, label: x.label }))} // ✅ güvenli
+                  width={chartWidth} // ✅ şart
+                  height={220}
+                  areaChart
+                  curved
+                  hideRules
 
-              yAxisThickness={0}
-              xAxisThickness={0}
-              showVerticalLines={false}
-              isAnimated
-              animationDuration={700}
+                  yAxisLabelWidth={yAxisLabelWidth} // ✅ y-axis için yer ayır
+                  yAxisThickness={0}
+                  xAxisThickness={0}
+                  showVerticalLines={false}
 
-              xAxisLabelsHeight={18}
-              xAxisLabelTextStyle={{ color: c.text, fontSize: 11 }}
-              initialSpacing={10}
-              spacing={chartData.length > 1 ? chartWidth / (chartData.length - 1) : chartWidth}
+                  // ✅ iOS + Android stabil ayarlar
+                  initialSpacing={0}
+                  endSpacing={0}
+                  spacing={
+                    chartData.length > 1
+                      ? Math.max(1, chartWidth / (chartData.length - 1))
+                      : chartWidth
+                  }
 
-              yAxisTextStyle={{ color: c.text }}
-              color={c.accent}
-              thickness={3}
-              startFillColor={c.accent}
-              endFillColor={c.accent}
-              startOpacity={0.18}
-              endOpacity={0.02}
-              pointerConfig={{
-                // TAP ile çalışsın (bazı sürümlerde gerekli)
-                activatePointersOnLongPress: false,
+                  isAnimated
+                  animationDuration={700}
 
-                autoAdjustPointerLabelPosition: true,
-                pointerStripUptoDataPoint: true,
-                pointerStripHeight: 220,
-                pointerStripColor: c.surfaceBorder,
-                pointerStripWidth: 2,
+                  xAxisLabelsHeight={18}
+                  xAxisLabelTextStyle={{ color: c.text, fontSize: 11 }}
+                  yAxisTextStyle={{ color: c.text, fontSize: 11 }}
 
-                pointerColor: c.accent,
-                radius: 4,
+                  color={c.accent}
+                  thickness={3}
+                  startFillColor={c.accent}
+                  endFillColor={c.accent}
+                  startOpacity={0.18}
+                  endOpacity={0.02}
 
-                pointerLabelWidth: 120,
-                pointerLabelHeight: 36,
+                  pointerConfig={{
+                    activatePointersOnLongPress: false,
+                    autoAdjustPointerLabelPosition: true,
+                    pointerStripUptoDataPoint: true,
+                    pointerStripHeight: 220,
+                    pointerStripColor: c.surfaceBorder,
+                    pointerStripWidth: 2,
+                    pointerColor: c.accent,
+                    radius: 4,
+                    pointerLabelWidth: 140,
+                    pointerLabelHeight: 40,
+                    pointerLabelComponent: (items: { value: number; label?: string }[]) => {
+                      const item = items?.[0];
+                      if (!item) return null;
 
-                pointerLabelComponent: (items: { value: number; label?: string }[]) => {
-                  const item = items?.[0];
-                  if (!item) return null;
-
-                  return (
-                    <View
-                      style={{
-                        paddingVertical: 6,
-                        paddingHorizontal: 10,
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: c.surfaceBorder,
-                        backgroundColor: c.surfaceBg,
-                      }}
-                    >
-                      <Text style={{ color: c.text, fontWeight: "700" }}>
-                        {item.label ? `${item.label}: ` : ""}
-                        {currencyTRY(Number(item.value))}
-                      </Text>
-                    </View>
-                  );
-                },
-              }}
-            />
+                      return (
+                        <View
+                          style={{
+                            paddingVertical: 6,
+                            paddingHorizontal: 10,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: c.surfaceBorder,
+                            backgroundColor: c.surfaceBg,
+                          }}
+                        >
+                          <Text style={{ color: c.text, fontWeight: "700" }}>
+                            {item.label ? `${item.label}: ` : ""}
+                            {currencyTRY(Number(item.value))}
+                          </Text>
+                        </View>
+                      );
+                    },
+                  }}
+                />
+              )}
+            </View>
           </View>
         </Card>
 

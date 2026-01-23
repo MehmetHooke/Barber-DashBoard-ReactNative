@@ -405,8 +405,8 @@ export default function BarberHome() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.screenBg }}>
-      <View className="px-4 pt-4 pb-3 mt-10">
-        <Text className="text-2xl font-bold" style={{ color: c.text }}>
+      <View className="px-4 pt-10 pb-3">
+        <Text className="text-2xl pt-10 font-bold" style={{ color: c.text }}>
           Bugün
         </Text>
         <Text className="text-sm mt-1" style={{ color: c.textMuted }}>
