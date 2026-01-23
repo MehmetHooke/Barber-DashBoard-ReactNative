@@ -16,7 +16,7 @@ import {
   subscribeMyPendingAppointments,
   subscribeMyTodayAppointments,
 } from "@/src/services/berbersAppointment.service";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 
 function toDate(ts: any): Date | null {
   try {
@@ -27,54 +27,34 @@ function toDate(ts: any): Date | null {
     return null;
   }
 }
-function CollapsibleBody({
+
+
+
+export function CollapsibleBody({
   open,
   children,
-  duration = 300,
 }: {
   open: boolean;
   children: React.ReactNode;
-  duration?: number;
 }) {
-  const measuredH = useSharedValue(0);
-  const progress = useSharedValue(open ? 1 : 0);
-
-  React.useEffect(() => {
-    progress.value = withTiming(open ? 1 : 0, {
-      duration,
-      easing: Easing.inOut(Easing.cubic),
-    });
-  }, [open, duration]);
-
-  const style = useAnimatedStyle(() => {
-    return {
-      height: measuredH.value * progress.value,
-      opacity: 0.2 + 0.8 * progress.value,
-      transform: [{ translateY: (1 - progress.value) * -6 }],
-    };
-  });
+  // Kapalıyken hiç render etme => ölçüm yok, overflow yok, halo yok
+  if (!open) return null;
 
   return (
-    <View style={{ position: "relative" }}>
-      
-      <View
-        pointerEvents="none"
-        style={{ position: "absolute", left: 0, right: 0, opacity: 0 }}
-        onLayout={(e) => {
-          const h = e.nativeEvent.layout.height;
-          measuredH.value = Math.max(measuredH.value, h);
-        }}
-      >
-        {children}
-      </View>
-
-      
-      <Animated.View style={[{ overflow: "hidden" }, style]}>
-        <View>{children}</View>
-      </Animated.View>
-    </View>
+    <Animated.View
+      // boyut değişimini native layout ile anim eder
+      layout={Layout.duration(720)}
+      // giriş/çıkış daha yumuşak
+      entering={FadeIn.duration(360)}
+      exiting={FadeOut.duration(360)}
+      // Android'de flicker azaltır
+      renderToHardwareTextureAndroid
+    >
+      {children}
+    </Animated.View>
   );
 }
+
 
 
 
@@ -512,8 +492,8 @@ export default function BarberHome() {
               c={c}
             />
 
-            <CollapsibleBody open={openPending} duration={300}>
-              <View style={{ gap: 12 }}>
+            <CollapsibleBody open={openPending}>
+              <View style={{ gap: 12, paddingHorizontal: 8, paddingBottom: 12 }}>
                 {pending.length === 0 ? (
                   <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
                     <View className="p-4 flex-row items-center">
@@ -524,16 +504,22 @@ export default function BarberHome() {
                     </View>
                   </Card>
                 ) : (
-                  pending.map((item) => (
-                    <AppointmentCard
-                      key={item.id}
-                      item={item}
-                      c={c}
-                      busy={busyId === item.id}
-                      onConfirm={() => onConfirm(item.id)}
-                      onCancel={() => onCancel(item.id)}
-                    />
-                  ))
+
+                  <View style={{ gap: 12 }}>
+                    {pending.map(item => (
+                      <View style={{ padding: 3 }}>
+                        <AppointmentCard
+                          key={item.id}
+                          item={item}
+                          c={c}
+                          busy={busyId === item.id}
+                          onConfirm={() => onConfirm(item.id)}
+                          onCancel={() => onCancel(item.id)}
+                        />
+                      </View>
+                    ))}
+                  </View>
+
                 )}
               </View>
             </CollapsibleBody>
@@ -549,8 +535,8 @@ export default function BarberHome() {
               c={c}
             />
 
-            <CollapsibleBody open={openAll} duration={300}>
-              <View style={{ gap: 12, paddingBottom: 24 }}>
+            <CollapsibleBody open={openAll}>
+              <View style={{ gap: 18, paddingBottom: 4, paddingHorizontal: 8 }}>
                 {all.length === 0 ? (
                   <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
                     <View className="p-4">
@@ -558,16 +544,17 @@ export default function BarberHome() {
                     </View>
                   </Card>
                 ) : (
-                  all.map((item) => (
-                    <AppointmentCard
-                      key={item.id}
-                      item={item}
-                      c={c}
-                      busy={busyId === item.id}
-                      onConfirm={() => onConfirm(item.id)}
-                      onCancel={() => onCancel(item.id)}
-                    />
-                  ))
+                    all.map((item) => (
+                      <AppointmentCard
+                        key={item.id}
+                        item={item}
+                        c={c}
+                        busy={busyId === item.id}
+                        onConfirm={() => onConfirm(item.id)}
+                        onCancel={() => onCancel(item.id)}
+                      />
+                    ))
+
                 )}
               </View>
             </CollapsibleBody>

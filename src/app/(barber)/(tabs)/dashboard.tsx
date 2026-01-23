@@ -200,7 +200,10 @@ export default function DashboardDemo() {
 
         {/* Line Chart */}
         <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
-          <View className="p-4">
+          <View
+            className="p-4"
+            onLayout={(e) => setW(e.nativeEvent.layout.width)} // ✅ burada ölç
+          >
             <Text className="text-base font-bold" style={{ color: c.text }}>
               Gelir Trendi
             </Text>
