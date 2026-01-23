@@ -95,6 +95,16 @@ export default function DashboardDemo() {
   const { effectiveTheme } = useAppTheme();
   const c = colors[effectiveTheme];
 
+  const [w, setW] = useState(0);
+
+  // kartın iç paddingi kadar düş (ör: p-4 => 16+16 = 32)
+  const innerPadding = 32;
+
+  // Y axis label için genişlik ayır (yazılar taşmasın)
+  const yAxisLabelWidth = 44;
+
+  const chartWidth = Math.max(0, w - innerPadding - yAxisLabelWidth);
+
   const [range, setRange] = useState<Range>("30d");
 
   // --- DEMO DATA (sonradan API ile değiştirirsin)
@@ -198,7 +208,8 @@ export default function DashboardDemo() {
               {range === "today" ? "Bugün" : range === "7d" ? "Son 7 gün" : "Son 30 gün"} (demo)
             </Text>
 
-            <View style={{ height: 12 }} />
+            <View onLayout={(e) => setW(e.nativeEvent.layout.width)}
+              style={{ height: 12 }} />
 
             <LineChart
               data={chartData}
@@ -206,15 +217,19 @@ export default function DashboardDemo() {
               areaChart
               curved
               hideRules
-              hideYAxisText
+
               yAxisThickness={0}
               xAxisThickness={0}
               showVerticalLines={false}
               isAnimated
               animationDuration={700}
+
+              xAxisLabelsHeight={18}
+              xAxisLabelTextStyle={{ color: c.text, fontSize: 11 }}
               initialSpacing={10}
-              spacing={34}
-              // “tek renk” istersen burayı theme’den bağlarız
+              spacing={chartData.length > 1 ? chartWidth / (chartData.length - 1) : chartWidth}
+
+              yAxisTextStyle={{ color: c.text }}
               color={c.accent}
               thickness={3}
               startFillColor={c.accent}
@@ -222,15 +237,24 @@ export default function DashboardDemo() {
               startOpacity={0.18}
               endOpacity={0.02}
               pointerConfig={{
+                // TAP ile çalışsın (bazı sürümlerde gerekli)
+                activatePointersOnLongPress: false,
+
+                autoAdjustPointerLabelPosition: true,
                 pointerStripUptoDataPoint: true,
+                pointerStripHeight: 220,
                 pointerStripColor: c.surfaceBorder,
                 pointerStripWidth: 2,
+
                 pointerColor: c.accent,
                 radius: 4,
-                pointerLabelComponent: (
-                  items: { value: number; label?: string }[]
-                ) => {
-                  const v = items?.[0]?.value ?? 0;
+
+                pointerLabelWidth: 120,
+                pointerLabelHeight: 36,
+
+                pointerLabelComponent: (items: { value: number; label?: string }[]) => {
+                  const item = items?.[0];
+                  if (!item) return null;
 
                   return (
                     <View
@@ -244,7 +268,8 @@ export default function DashboardDemo() {
                       }}
                     >
                       <Text style={{ color: c.text, fontWeight: "700" }}>
-                        {currencyTRY(Number(v))}
+                        {item.label ? `${item.label}: ` : ""}
+                        {currencyTRY(Number(item.value))}
                       </Text>
                     </View>
                   );
@@ -273,11 +298,12 @@ export default function DashboardDemo() {
                 data={pieData}
                 donut
                 radius={92}
-                innerRadius={60}
+                innerRadius={70}
                 showText={false}
-                strokeColor={c.screenBg}
+                strokeColor={c.cardBg}
                 strokeWidth={10}
                 focusOnPress
+
               />
 
               <View style={{ flex: 1, gap: 10 }}>

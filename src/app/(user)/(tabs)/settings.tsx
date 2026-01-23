@@ -225,7 +225,7 @@ export default function UserSettings() {
         >
           <View className="px-4 py-4 flex-row items-center">
             <View
-              className="w-12 h-12 rounded-2xl items-center justify-center mr-3 border overflow-hidden"
+              className="w-28 h-28 rounded-2xl items-center justify-center mr-3 border overflow-hidden"
               style={{
                 backgroundColor: c.accentSoft,
                 borderColor: c.accentBorder,
@@ -234,7 +234,7 @@ export default function UserSettings() {
               {profile?.profileImage ? (
                 <Image
                   source={{ uri: profile.profileImage }}
-                  style={{ width: 48, height: 48 }}
+                  style={{ width: 112, height: 112, borderRadius: 10 }}
                   resizeMode="cover"
                 />
               ) : (
