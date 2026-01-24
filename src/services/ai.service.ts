@@ -20,11 +20,31 @@ async function authedPost<T>(
     body: JSON.stringify(body),
   });
 
-  const json = await res.json();
-  if (!res.ok) {
-    // backend'den gelen hata mesajını göster
-    throw new Error(json?.message || json?.error || "İstek başarısız.");
+  // ✅ önce text al
+  const raw = await res.text();
+
+  // ✅ boş body yakala
+  if (!raw) {
+    throw new Error(`Sunucudan boş cevap geldi. Status: ${res.status}`);
   }
+
+  // ✅ JSON parse güvenli
+  let json: any;
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    // JSON değilse raw'ı göster (çoğu zaman HTML error page olur)
+    throw new Error(
+      `JSON parse edilemedi. Status: ${res.status}\n${raw.slice(0, 200)}`,
+    );
+  }
+
+  if (!res.ok) {
+    throw new Error(
+      json?.message || json?.error || `İstek başarısız. Status: ${res.status}`,
+    );
+  }
+
   return json as T;
 }
 

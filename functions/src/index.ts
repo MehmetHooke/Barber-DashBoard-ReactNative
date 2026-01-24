@@ -118,31 +118,59 @@ const ServicePricingOutputSchema = z.object({
 // ----------------------------
 // Gemini call helper (Structured Output)
 // ----------------------------
-async function generateStructuredJSON<T extends z.ZodTypeAny>(opts: {
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function isOverloadError(e: any) {
+  const msg = String(e?.message || "");
+  return (
+    msg.includes("503") ||
+    msg.includes("UNAVAILABLE") ||
+    msg.toLowerCase().includes("overloaded")
+  );
+}
+
+async function generateStructuredJSON<TSchema extends z.ZodTypeAny>(opts: {
   apiKey: string;
   model: string;
   system: string;
   prompt: string;
-  schema: T;
+  schema: TSchema;
 }) {
   const ai = new GoogleGenAI({ apiKey: opts.apiKey });
 
-  const response = await ai.models.generateContent({
-    model: opts.model,
-    contents: opts.prompt,
-    config: {
-      // Structured output: JSON + schema
-      responseMimeType: "application/json",
-      responseJsonSchema: zodToJsonSchema(opts.schema),
-      systemInstruction: opts.system,
-      temperature: 0.4,
-    },
-  });
+  const maxAttempts = 3;
 
-  // SDK response.text -> JSON string
-  const raw = response.text || "";
-  const parsed = JSON.parse(raw);
-  return opts.schema.parse(parsed) as z.infer<T>;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: opts.model,
+        contents: opts.prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseJsonSchema: zodToJsonSchema(opts.schema as any) as any,
+          systemInstruction: opts.system,
+          temperature: 0.4,
+        },
+      });
+
+      const raw = response.text || "";
+      const parsed = JSON.parse(raw);
+      return opts.schema.parse(parsed) as z.infer<TSchema>;
+    } catch (e: any) {
+      if (attempt < maxAttempts && isOverloadError(e)) {
+        // 250ms, 750ms, 1750ms gibi büyüsün
+        const wait = 250 * attempt * attempt + Math.floor(Math.random() * 200);
+        await sleep(wait);
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  // buraya normalde düşmez
+  throw new Error("UNAVAILABLE");
 }
 
 // ----------------------------
@@ -202,14 +230,35 @@ ${JSON.stringify(payload)}
         `.trim();
 
         const apiKey = GEMINI_API_KEY.value();
-        const data = await generateStructuredJSON({
-          apiKey,
-          // Free tier için genelde hızlı/ucuz model tercih edilir:
-          model: "gemini-3-flash-preview",
-          system,
-          prompt,
-          schema: WeeklyCoachOutputSchema,
-        });
+        let data: any;
+
+        try {
+          data = await generateStructuredJSON({
+            apiKey,
+            model: "gemini-3-flash-preview",
+            system,
+            prompt,
+            schema: WeeklyCoachOutputSchema,
+          });
+        } catch (e: any) {
+          // overload ise fallback model
+          const msg = String(e?.message || "");
+          if (
+            msg.includes("UNAVAILABLE") ||
+            msg.includes("503") ||
+            msg.toLowerCase().includes("overloaded")
+          ) {
+            data = await generateStructuredJSON({
+              apiKey,
+              model: "gemini-1.5-flash",
+              system,
+              prompt,
+              schema: WeeklyCoachOutputSchema,
+            });
+          } else {
+            throw e;
+          }
+        }
 
         // write usage + cache
         await usageRef.set({

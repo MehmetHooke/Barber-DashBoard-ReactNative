@@ -16,6 +16,7 @@ import { colors } from "@/src/theme/colors";
 import { LineChart, PieChart } from "react-native-gifted-charts";
 
 import { db } from "@/src/lib/firebase";
+import { router } from "expo-router";
 import { getAuth } from "firebase/auth";
 import {
   collection,
@@ -386,6 +387,65 @@ export default function Dashboard() {
         </Text>
       </View>
 
+      
+      <View className="px-4">
+        <Pressable
+          onPress={() => {
+            // Seçili aralığı (range) zaten dashboard hesaplıyor.
+            // Biz weeklyAnalyze’a payload’ı parametre olarak yollayacağız.
+
+            // range window (from/to) hesapla:
+            const { from, to } = getRangeWindow(range);
+
+            // dailyRevenue: chartData’dan üret (label değil, gerçek date lazım)
+            // Şimdilik hızlı MVP: chartData label yerine “range günleri” ile aynı sırada date üretiyoruz
+            const days = range === "today" ? 1 : range === "7d" ? 7 : 30;
+
+            const start = startOfDay(from);
+            const dailyRevenue = Array.from({ length: days }).map((_, i) => {
+              const day = addDays(start, i);
+              return {
+                date: dateKey(day),
+                value: state.chartData[i]?.value ?? 0,
+              };
+            });
+
+            const appointments = {
+              total: state.totalAppointments,
+              cancelled: state.pieStatus.CANCELED,
+              completed: state.pieStatus.COMPLETED,
+              pending: state.pieStatus.PENDING,
+            };
+
+            router.push({
+              pathname: "/(barber)/weeklyAnalyze",
+              params: {
+                shopId: "main",
+                rangeStart: dateKey(from),
+                rangeEnd: dateKey(to),
+                currency: "TRY",
+                dailyRevenue: JSON.stringify(dailyRevenue),
+                appointments: JSON.stringify(appointments),
+                timeBuckets: JSON.stringify([]), // sonra doldururuz
+              },
+            });
+          }}
+          style={{
+            backgroundColor: c.accent,
+            borderRadius: 16,
+            paddingVertical: 12,
+            alignItems: "center",
+            marginTop: 10,
+            marginBottom: 10,
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "800" }}>
+            AI ile Haftalık Analiz
+          </Text>
+        </Pressable>
+      </View>
+
+
       <ScrollView
         contentContainerStyle={{
           paddingTop: 10,
@@ -594,7 +654,7 @@ export default function Dashboard() {
                           paddingHorizontal: 14,
                           borderRadius: 14,
                           borderWidth: 1,
-                          gap:5,
+                          gap: 5,
                           borderColor: c.surfaceBorder,
                           backgroundColor: c.cardBg,
                         }}
