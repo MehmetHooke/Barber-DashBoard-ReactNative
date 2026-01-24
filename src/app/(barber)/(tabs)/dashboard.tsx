@@ -383,7 +383,7 @@ export default function Dashboard() {
           Dashboard
         </Text>
         <Text className="mt-1 pl-2" style={{ color: c.textMuted }}>
-          KPI + Gelir Grafiği + Durum Dağılımı
+          KPI + Gelir Grafiği + Durum Dağılımı + AI ile Analiz
         </Text>
       </View>
 
@@ -440,7 +440,7 @@ export default function Dashboard() {
           }}
         >
           <Text style={{ color: "white", fontWeight: "800" }}>
-            AI ile Haftalık Analiz
+            AI ile Haftalık Analiz Al
           </Text>
         </Pressable>
       </View>
