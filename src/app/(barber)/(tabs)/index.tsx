@@ -507,7 +507,7 @@ export default function BarberHome() {
 
                   <View style={{ gap: 12 }}>
                     {pending.map(item => (
-                      <View style={{ padding: 3 }}>
+                      <View key={item.id} style={{ padding: 3 }}>
                         <AppointmentCard
                           key={item.id}
                           item={item}

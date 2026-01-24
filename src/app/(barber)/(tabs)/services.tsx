@@ -22,6 +22,7 @@ import Card from "@/src/components/Card";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
 
+import { useAppAlert } from "@/src/components/AppAlertProvider";
 import { auth } from "@/src/lib/firebase";
 import {
   createService,
@@ -66,6 +67,7 @@ export default function ServicesManage() {
   const [uploadingKey, setUploadingKey] = useState<string | null>(null); // "new" | serviceId | null
   const [savingKey, setSavingKey] = useState<string | null>(null); // "new" | serviceId | null
 
+   const { alert } = useAppAlert();
   async function load() {
     try {
       const list = await getActiveServices(SHOP_ID);
@@ -223,7 +225,7 @@ export default function ServicesManage() {
         price: Number(newDraft.price),
       });
 
-      Alert.alert("Başarılı", "Hizmet oluşturuldu.");
+      alert("Başarılı", "Hizmet oluşturuldu.");
 
       // reset + listeyi yenile
       setNewDraft({

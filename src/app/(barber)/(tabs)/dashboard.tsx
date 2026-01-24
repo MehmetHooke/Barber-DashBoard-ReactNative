@@ -5,7 +5,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  View,
+  View
 } from "react-native";
 
 import { Text } from "@/components/ui/text";
@@ -296,7 +296,7 @@ export default function Dashboard() {
   const [forceTick, setForceTick] = useState(0);
 
 
-  
+
   function downsampleLabels(data: { label: string; value: number }[], range: Range) {
     if (range !== "30d") return data;
 
@@ -367,12 +367,12 @@ export default function Dashboard() {
   }, [range]);
 
   const cancelRate = useMemo(() => {
-  const total = pieData.reduce((sum, p) => sum + p.value, 0);
-  if (total === 0) return 0;
+    const total = pieData.reduce((sum, p) => sum + p.value, 0);
+    if (total === 0) return 0;
 
-  const canceled = pieData.find(p => p.text === "İptal")?.value ?? 0;
-  return Math.round((canceled / total) * 100);
-}, [pieData]);
+    const canceled = pieData.find(p => p.text === "İptal")?.value ?? 0;
+    return Math.round((canceled / total) * 100);
+  }, [pieData]);
 
 
   return (
@@ -419,7 +419,7 @@ export default function Dashboard() {
         ) : (
           <>
             {/* KPI */}
-            <View style={{  flexDirection: "row", gap: 12 }}>
+            <View style={{ flexDirection: "row", gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <KpiCard
                   c={c}
@@ -570,14 +570,14 @@ export default function Dashboard() {
                           width: 2 * 60,       // innerRadius * 2
                           height: 2 * 60,      // innerRadius * 2
                           borderRadius: 60,
-                          backgroundColor: c.surfaceBg, 
+                          backgroundColor: c.surfaceBg,
                           alignItems: "center",
                           justifyContent: "center",
                         }}
                       >
-                        <Text key={cancelRate+"Header"} style={{color: c.text,fontWeight: "700"}}>İptal Oranı</Text>
+                        <Text key={cancelRate + "Header"} style={{ color: c.text, fontWeight: "700" }}>İptal Oranı</Text>
                         {/* istersen merkezde text */}
-                         <Text key={cancelRate} style={{ color: c.text, fontWeight: "700" }}>%{cancelRate}</Text>
+                        <Text key={cancelRate} style={{ color: c.text, fontWeight: "700" }}>%{cancelRate}</Text>
                       </View>
                     )}
                   />
@@ -585,15 +585,16 @@ export default function Dashboard() {
                   <View style={{ flex: 1, gap: 10 }}>
                     {pieData.map((s) => (
                       <View
-                        key={`${s.text}-${s.value}`}
+                        key={`${s.text}-" "${s.value}`}
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
                           justifyContent: "space-between",
                           paddingVertical: 10,
-                          paddingHorizontal: 12,
+                          paddingHorizontal: 14,
                           borderRadius: 14,
                           borderWidth: 1,
+                          gap:5,
                           borderColor: c.surfaceBorder,
                           backgroundColor: c.cardBg,
                         }}
