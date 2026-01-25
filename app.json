@@ -1,22 +1,25 @@
 {
   "expo": {
-    "name": "Berber-RandevuRN",
-    "slug": "Berber-RandevuRN",
+    "name": "Berberim",
+    "slug": "berberim",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
-    "scheme": "berberrandevurn",
+    "splash": {
+      "image": "./src/assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E0E0E"
+    },
+    "scheme": "berberim",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./src/assets/images/android-icon-foreground.png",
-        "backgroundImage": "./src/assets/images/android-icon-background.png",
-        "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./src/assets/images/icon-nobg.png",
+        "backgroundColor": "#0E0E0E"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -31,7 +34,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "",//splash için foto gerekli
+          "image": "./src/assets/images/splash.png", //splash için foto gerekli
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",

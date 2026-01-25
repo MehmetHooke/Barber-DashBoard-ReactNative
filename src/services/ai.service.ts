@@ -40,9 +40,13 @@ async function authedPost<T>(
   }
 
   if (!res.ok) {
-    throw new Error(
+    const err: any = new Error(
       json?.message || json?.error || `İstek başarısız. Status: ${res.status}`,
     );
+    err.status = res.status;
+    err.code = json?.error; // ör: "WEEKLY_LIMIT"
+    err.payload = json; // upsell dahil her şey
+    throw err;
   }
 
   return json as T;
@@ -56,7 +60,11 @@ export type WeeklyCoachData = {
   oneLineSummary: string;
 };
 
-export type WeeklyCoachResponse = { cached: boolean; data: WeeklyCoachData };
+export type WeeklyCoachResponse = {
+  cached: boolean;
+  data: WeeklyCoachData;
+  meta?: { createdAtMs?: number };
+};
 
 export function fetchWeeklyCoach(payload: any) {
   return authedPost<WeeklyCoachResponse>("/aiWeeklyCoach", payload);
