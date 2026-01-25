@@ -294,8 +294,6 @@ export const aiServicePricing = onRequest(
       try {
         if (req.method !== "POST") return badRequest(res, "POST required");
 
-        const { uid } = await requireUser(req);
-
         const input = ServicePricingInputSchema.safeParse(req.body);
         if (!input.success) return badRequest(res, input.error.message);
 
@@ -305,10 +303,20 @@ export const aiServicePricing = onRequest(
         const cacheId = `${payload.shopId}_${payload.service.name}_${payload.service.price}_${payload.history.last4WeeksCount}_${payload.demand.peakShare}`;
         const cacheRef = db.collection("aiPricingCache").doc(cacheId);
         const cacheSnap = await cacheRef.get();
+
         if (cacheSnap.exists) {
-          return res
-            .status(200)
-            .json({ cached: true, data: cacheSnap.data()?.data });
+          const doc = cacheSnap.data() || {};
+          const createdAtMs =
+            doc?.createdAt?.toMillis?.() ??
+            (typeof doc?.createdAtMs === "number"
+              ? doc.createdAtMs
+              : Date.now());
+
+          return res.status(200).json({
+            cached: true,
+            data: doc?.data,
+            meta: { createdAtMs },
+          });
         }
 
         const system = [
@@ -335,9 +343,11 @@ ${JSON.stringify(payload)}
           schema: ServicePricingOutputSchema,
         });
 
+        const nowMs = Date.now();
+
         await cacheRef.set({
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          uid,
+          createdAtMs: nowMs, // okunması hızlı fallback
           data,
         });
 
