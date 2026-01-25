@@ -68,6 +68,7 @@ const WeeklyCoachInputSchema = z.object({
     .array(z.object({ label: z.string(), count: z.number() }))
     .optional()
     .default([]),
+  force: z.boolean().optional().default(false),
 });
 
 const WeeklyCoachOutputSchema = z.object({
@@ -194,23 +195,51 @@ export const aiWeeklyCoach = onRequest(
 
         // Cache first
         const cacheSnap = await cacheRef.get();
-        if (cacheSnap.exists) {
-          return res
-            .status(200)
-            .json({ cached: true, data: cacheSnap.data()?.data });
+
+        // ✅ force değilse cache dön
+        if (!payload.force && cacheSnap.exists) {
+          const doc = cacheSnap.data() || {};
+          const createdAtMs =
+            doc?.createdAt?.toMillis?.() ??
+            (typeof doc?.createdAtMs === "number"
+              ? doc.createdAtMs
+              : Date.now());
+
+          return res.status(200).json({
+            cached: true,
+            data: doc?.data,
+            meta: { createdAtMs },
+          });
         }
 
         // Rate limit (1 request / week / user / shop)
         const wk = weekKeyFromISO(payload.range.start);
-        const usageRef = db
-          .collection("aiUsage")
-          .doc(`${uid}_${payload.shopId}_${wk}`);
-        const usageSnap = await usageRef.get();
-        if (usageSnap.exists) {
-          return res.status(429).json({
-            error: "WEEKLY_LIMIT",
-            message:
-              "Bu hafta için analiz limiti doldu. Aynı hafta için cache kullanılıyor olmalı.",
+        const DISABLE_WEEKLY_LIMIT = true; // geliştirme bitince false
+
+        if (!DISABLE_WEEKLY_LIMIT) {
+          const usageRef = db
+            .collection("aiUsage")
+            .doc(`${uid}_${payload.shopId}_${wk}`);
+          const usageSnap = await usageRef.get();
+
+          if (usageSnap.exists) {
+            return res.status(429).json({
+              error: "WEEKLY_LIMIT",
+              message: "Bu hafta için ücretsiz analiz hakkın doldu.",
+              upsell: {
+                title: "Sınırsız analiz için Premium",
+                detail:
+                  "Premium ile haftalık limit kalkar, her gün analiz alabilirsin.",
+                cta: "Premium’u Gör",
+              },
+            });
+          }
+
+          await usageRef.set({
+            uid,
+            shopId: payload.shopId,
+            week: wk,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
         }
 
@@ -259,21 +288,19 @@ ${JSON.stringify(payload)}
             throw e;
           }
         }
-
-        // write usage + cache
-        await usageRef.set({
-          uid,
-          shopId: payload.shopId,
-          week: wk,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+        const nowMs = Date.now();
 
         await cacheRef.set({
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAtMs: nowMs,
           data,
         });
 
-        return res.status(200).json({ cached: false, data });
+        return res.status(200).json({
+          cached: false,
+          data,
+          meta: { createdAtMs: nowMs },
+        });
       } catch (e: any) {
         if (String(e?.message).includes("UNAUTHENTICATED")) {
           return res.status(401).json({ error: "UNAUTHENTICATED" });
