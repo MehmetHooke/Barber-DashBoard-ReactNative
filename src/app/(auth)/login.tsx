@@ -3,9 +3,10 @@ import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { loginWithEmail } from "@/src/services/auth.service";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
-import { Alert } from "react-native";
+import { Alert, ImageBackground } from "react-native";
 
 export default function Login() {
   const [loading, setLoading] = React.useState(false);
@@ -40,53 +41,75 @@ export default function Login() {
   }
 
   return (
-    <VStack className="flex-1 justify-center px-6 bg-black">
-      <Text className="text-white text-3xl font-bold mb-6">Welcome Back</Text>
-
-      <Input variant="rounded" className="mb-4 bg-zinc-900 border border-zinc-700">
-        <InputField
-          placeholder="Email"
-          className="text-white"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          editable={!loading}
-        />
-      </Input>
-
-      <Input variant="rounded" className="mb-6 bg-zinc-900 border border-zinc-700">
-        <InputField
-          placeholder="Password"
-          secureTextEntry
-          className="text-white"
-          value={password}
-          onChangeText={setPassword}
-          editable={!loading}
-        />
-      </Input>
-
-      <Button
-        variant="outline"
-        className="rounded-2xl mb-10"
-        onPress={onLogin}
-        isDisabled={loading}
+    <ImageBackground
+      source={require("@/src/assets/images/barber-login.png")}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <LinearGradient
+        colors={["rgba(0,0,0,0.75)", "rgba(0,0,0,0.9)"]}
+        style={{ flex: 1 }}
       >
-        <Text className="text-white font-semibold">
-          {loading ? "Giriş yapılıyor..." : "Login"}
-        </Text>
-      </Button>
+        <VStack className="flex-1 justify-center px-6">
+          <Text className="text-white text-3xl font-bold mb-6">
+            Hoş Geldin
+          </Text>
 
-      <Button
-        variant="link"
-        className="mt-3"
-        onPress={() => router.push("/(auth)/register")}
-        isDisabled={loading}
-      >
-        <Text className="text-white/70">
-          Hesabın yok mu? <Text className="underline font-semibold">Kayıt ol</Text>
-        </Text>
-      </Button>
-    </VStack>
+          <Input
+            variant="rounded"
+            className="mb-4 bg-zinc-900/90 border border-zinc-700"
+          >
+            <InputField
+              placeholder="Eposta"
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              className="text-white"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              editable={!loading}
+            />
+          </Input>
+
+          <Input
+            variant="rounded"
+            className="mb-6 bg-zinc-900/90 border border-zinc-700"
+          >
+            <InputField
+              placeholder="Şifre"
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              secureTextEntry
+              className="text-white"
+              value={password}
+              onChangeText={setPassword}
+              editable={!loading}
+            />
+          </Input>
+
+          <Button
+            variant="outline"
+            className="rounded-2xl mb-10 border-white/30"
+            onPress={onLogin}
+            isDisabled={loading}
+          >
+            <Text className="text-white font-semibold">
+              {loading ? "Giriş yapılıyor..." : "Giriş yap"}
+            </Text>
+          </Button>
+
+          <Button
+            variant="link"
+            className="mt-3"
+            onPress={() => router.push("/(auth)/register")}
+            isDisabled={loading}
+          >
+            <Text className="text-white/70">
+              Hesabın yok mu?{" "}
+              <Text className="underline font-semibold">Kayıt ol</Text>
+            </Text>
+          </Button>
+        </VStack>
+      </LinearGradient>
+    </ImageBackground>
   );
 }
