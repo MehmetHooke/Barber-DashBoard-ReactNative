@@ -18,6 +18,21 @@ function safeJsonParse<T>(raw?: string): T | null {
     }
 }
 
+function timeAgoTR(ms?: number | null) {
+    if (!ms) return "";
+    const diff = Date.now() - ms;
+    const sec = Math.floor(diff / 1000);
+    if (sec < 10) return "az önce";
+    if (sec < 60) return `${sec} sn önce`;
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min} dk önce`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr} saat önce`;
+    const day = Math.floor(hr / 24);
+    return `${day} gün önce`;
+}
+
+
 export default function WeeklyAnalyzeModal() {
     const { effectiveTheme } = useAppTheme();
     const c = colors[effectiveTheme];
@@ -36,6 +51,11 @@ export default function WeeklyAnalyzeModal() {
 
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<WeeklyCoachData | null>(null);
+    const [cached, setCached] = useState(false);
+    const [createdAtMs, setCreatedAtMs] = useState<number | null>(null);
+    type Upsell = { title?: string; detail?: string; cta?: string } | null;
+    const [upsell, setUpsell] = useState<Upsell>(null);
+
 
     const payload = useMemo(() => {
         const dailyRevenue = safeJsonParse<any[]>(params.dailyRevenue) ?? [];
@@ -52,19 +72,41 @@ export default function WeeklyAnalyzeModal() {
         };
     }, [params]);
 
-    async function run() {
+    async function run(force = false) {
+        setUpsell(null);
         setError(null);
-        // basit guard
-        if (!payload.range.start || !payload.range.end || payload.dailyRevenue.length === 0) {
-            Alert.alert("Eksik veri", "Dashboard verisi gelmedi. Tekrar deneyin.");
-            return;
-        }
+
+        console.log("RUN CLICKED", {
+            start: payload.range.start,
+            end: payload.range.end,
+            dailyRevenueLen: payload.dailyRevenue.length,
+        });
 
         try {
             setLoading(true);
-            const res = await fetchWeeklyCoach(payload);
+            console.log("BEFORE FETCH");
+
+            const res = await fetchWeeklyCoach({ ...payload, force });
+
+            console.log("AFTER FETCH", res);
             setData(res.data);
+            setCached(!!res.cached);
+            setCreatedAtMs(res.meta?.createdAtMs ?? null);
+            console.log("Zaman", createdAtMs);
         } catch (e: any) {
+            console.log("FETCH ERROR", e);
+
+            // ✅ Limit dolduysa: premium kartı göster
+            if (e?.code === "WEEKLY_LIMIT") {
+                setError(e?.message || "Bu hafta için limit doldu.");
+                setUpsell(e?.payload?.upsell ?? {
+                    title: "Premium ile sınırsız analiz",
+                    detail: "Premium’da haftalık limit kalkar ve analizleri istediğin zaman yenileyebilirsin.",
+                    cta: "Premium’u Gör",
+                });
+                return;
+            }
+
             const msg = String(e?.message || "");
             if (msg.includes("503") || msg.toLowerCase().includes("overloaded") || msg.includes("UNAVAILABLE")) {
                 setError("AI şu an yoğun. 10-20 saniye sonra tekrar dene.");
@@ -74,7 +116,10 @@ export default function WeeklyAnalyzeModal() {
         } finally {
             setLoading(false);
         }
+
     }
+
+
 
     return (
         // transparan modal arka plan
@@ -111,7 +156,7 @@ export default function WeeklyAnalyzeModal() {
                             </Text>
 
                             <Pressable
-                                onPress={run}
+                                onPress={() => run(false)}
                                 disabled={loading}
                                 style={{
                                     backgroundColor: c.accent,
@@ -124,7 +169,11 @@ export default function WeeklyAnalyzeModal() {
                                 {loading ? (
                                     <ActivityIndicator />
                                 ) : (
-                                    <Text style={{ color: "white", fontWeight: "800" }}>Haftalık Analiz Al</Text>
+                                    <Text style={{ color: "white", fontWeight: "800" }}>
+                                        {upsell ? "Premium ile devam et" : error ? "Tekrar Dene" : "Haftalık Analiz Al"}
+
+                                    </Text>
+
                                 )}
                             </Pressable>
 
@@ -133,6 +182,49 @@ export default function WeeklyAnalyzeModal() {
                                     Butona basınca özet + uyarılar + 3 aksiyon önerisi gelecektir.
                                 </Text>
                             )}
+
+                            {!!error && (
+                                <Text className="text-xs" style={{ color: "tomato" }}>
+                                    {error}
+                                </Text>
+                            )}
+
+                            {upsell && (
+                                <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+                                    <View style={{ padding: 14, gap: 10 }}>
+                                        <Text style={{ color: c.text, fontWeight: "800", fontSize: 14 }}>
+                                            {upsell.title ?? "Premium ile sınırsız analiz"}
+                                        </Text>
+
+                                        {!!upsell.detail && (
+                                            <Text style={{ color: c.textMuted, fontSize: 12, lineHeight: 16 }}>
+                                                {upsell.detail}
+                                            </Text>
+                                        )}
+
+                                        <Pressable
+                                            onPress={() => {
+                                                Alert.alert("Premium", "Premium sayfasına yönlendireceğiz (sonraki adım).");
+                                            }}
+                                            style={{
+                                                marginTop: 4,
+                                                backgroundColor: c.accent,
+                                                borderRadius: 14,
+                                                paddingVertical: 10,
+                                                alignItems: "center",
+                                            }}
+                                        >
+                                            <Text style={{ color: "white", fontWeight: "900" }}>
+                                                {upsell.cta ?? "Premium’u Gör"}
+                                            </Text>
+                                        </Pressable>
+
+                                        <Text style={{ color: c.textMuted, fontSize: 11 }}>
+                                            Premium ile haftalık limit kalkar, önerileri dilediğin zaman güncellersin.
+                                        </Text>
+                                    </View>
+                                </Card>
+                            )}
                         </View>
                     </Card>
                 </View>
@@ -140,10 +232,53 @@ export default function WeeklyAnalyzeModal() {
                 <ScrollView style={{ paddingHorizontal: 16, marginTop: 12 }} showsVerticalScrollIndicator={false}>
                     {data && (
                         <View style={{ gap: 12, paddingBottom: 24 }}>
+                            {/* ✅ Badge row */}
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                {cached ? (
+                                    <View
+                                        style={{
+                                            paddingHorizontal: 10,
+                                            paddingVertical: 6,
+                                            borderRadius: 999,
+                                            backgroundColor: c.accentSoft,
+                                            borderWidth: 1,
+                                            borderColor: c.surfaceBorder,
+                                        }}
+                                    >
+                                        <Text style={{ color: c.accent, fontWeight: "800", fontSize: 12 }}>
+                                            🧠 Önbellekten gösteriliyor
+                                        </Text>
+                                    </View>
+                                ) : (
+                                    <View
+                                        style={{
+                                            paddingHorizontal: 10,
+                                            paddingVertical: 6,
+                                            borderRadius: 999,
+                                            backgroundColor: c.surfaceBg,
+                                            borderWidth: 1,
+                                            borderColor: c.surfaceBorder,
+                                        }}
+                                    >
+                                        <Text style={{ color: c.accent, fontWeight: "800", fontSize: 12 }}>
+                                           ⚡ Yeni analiz
+                                        </Text>
+                                    </View>
+                                )}
+
+                                {!!createdAtMs && (
+                                    <Text style={{ color: c.textMuted, fontSize: 12 }}>
+                                        Son analiz: {timeAgoTR(createdAtMs)}
+                                    </Text>
+                                )}
+                            </View>
+
+                            {/* ✅ Title */}
                             <Text className="text-base font-bold" style={{ color: c.text }}>
                                 {data.title}
                             </Text>
 
+                            {/* ✅ Insights */}
                             <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
                                 <View style={{ padding: 14, gap: 10 }}>
                                     <Text className="text-sm font-bold" style={{ color: c.text }}>Özet</Text>
@@ -156,6 +291,7 @@ export default function WeeklyAnalyzeModal() {
                                 </View>
                             </Card>
 
+                            {/* ✅ Warnings */}
                             {data.warnings?.length > 0 && (
                                 <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
                                     <View style={{ padding: 14, gap: 8 }}>
@@ -169,7 +305,8 @@ export default function WeeklyAnalyzeModal() {
                                 </Card>
                             )}
 
-                            <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+                            {/* ✅ Actions */}
+                            <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.surfaceBorder}>
                                 <View style={{ padding: 14, gap: 10 }}>
                                     <Text className="text-sm font-bold" style={{ color: c.text }}>Aksiyon Planı</Text>
                                     {data.actions.map((a, idx) => (
@@ -187,7 +324,33 @@ export default function WeeklyAnalyzeModal() {
                             </Text>
                         </View>
                     )}
+                    {data && cached && (
+                        <Pressable
+                            onPress={() => run(true)}
+                            disabled={loading}
+                            style={{
+                                marginTop: 8,
+                                backgroundColor: c.surfaceBg,
+                                borderWidth: 1,
+                                borderColor: c.surfaceBorder,
+                                borderRadius: 14,
+                                paddingVertical: 10,
+                                alignItems: "center",
+                                opacity: loading ? 0.7 : 1,
+                            }}
+                        >
+                            {loading ? (
+                                <ActivityIndicator />
+                            ) : (
+                                <Text style={{ color: c.text, fontWeight: "800" }}>
+                                    Yeniden Analiz Al
+                                </Text>
+                            )}
+                        </Pressable>
+                    )}
+
                 </ScrollView>
+
             </View>
         </View>
     );
