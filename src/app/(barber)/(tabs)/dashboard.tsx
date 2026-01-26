@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  ImageBackground,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -125,6 +126,7 @@ function Segment({
             key={it.key}
             onPress={() => onChange(it.key)}
             style={{
+              borderRadius:12,
               flex: 1,
               paddingVertical: 10,
               alignItems: "center",
@@ -296,7 +298,10 @@ export default function Dashboard() {
   const [chartW, setChartW] = useState<number>(0);
   const [forceTick, setForceTick] = useState(0);
 
-
+  const BG_BY_THEME = {
+    light: require("@/src/assets/images/theme/dasboardLight.png"),
+    dark: require("@/src/assets/images/theme/dashboardDark.png"),
+  } as const;
 
   function downsampleLabels(data: { label: string; value: number }[], range: Range) {
     if (range !== "30d") return data;
@@ -377,311 +382,317 @@ export default function Dashboard() {
 
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.screenBg }}>
-      <View className="px-4 pt-10 pb-3">
-        <Text className="text-2xl pt-10 font-bold" style={{ color: c.text }}>
-          Dashboard
-        </Text>
-        <Text className="mt-1 pl-2" style={{ color: c.textMuted }}>
-          KPI + Gelir Grafiği + Durum Dağılımı + AI ile Analiz
-        </Text>
-      </View>
-
-      
-      <View className="px-4">
-        <Pressable
-          onPress={() => {
-            // Seçili aralığı (range) zaten dashboard hesaplıyor.
-            // Biz weeklyAnalyze’a payload’ı parametre olarak yollayacağız.
-
-            // range window (from/to) hesapla:
-            const { from, to } = getRangeWindow(range);
-
-            // dailyRevenue: chartData’dan üret (label değil, gerçek date lazım)
-            // Şimdilik hızlı MVP: chartData label yerine “range günleri” ile aynı sırada date üretiyoruz
-            const days = range === "today" ? 1 : range === "7d" ? 7 : 30;
-
-            const start = startOfDay(from);
-            const dailyRevenue = Array.from({ length: days }).map((_, i) => {
-              const day = addDays(start, i);
-              return {
-                date: dateKey(day),
-                value: state.chartData[i]?.value ?? 0,
-              };
-            });
-
-            const appointments = {
-              total: state.totalAppointments,
-              cancelled: state.pieStatus.CANCELED,
-              completed: state.pieStatus.COMPLETED,
-              pending: state.pieStatus.PENDING,
-            };
-
-            router.push({
-              pathname: "/(barber)/weeklyAnalyze",
-              params: {
-                shopId: "main",
-                rangeStart: dateKey(from),
-                rangeEnd: dateKey(to),
-                currency: "TRY",
-                dailyRevenue: JSON.stringify(dailyRevenue),
-                appointments: JSON.stringify(appointments),
-                timeBuckets: JSON.stringify([]), // sonra doldururuz
-              },
-            });
-          }}
-          style={{
-            backgroundColor: c.accent,
-            borderRadius: 16,
-            paddingVertical: 12,
-            alignItems: "center",
-            marginTop: 10,
-            marginBottom: 10,
-          }}
-        >
-          <Text style={{ color: "white", fontWeight: "800" }}>
-            AI ile Haftalık Analiz Al
+    <ImageBackground
+      source={BG_BY_THEME[effectiveTheme]}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <View style={{ flex: 1 }}>
+        <View className="px-4 pt-10 pb-3">
+          <Text className="text-2xl pt-10 font-bold" style={{ color: c.text }}>
+            Dashboard
           </Text>
-        </Pressable>
-      </View>
+          <Text className="mt-1 pl-2" style={{ color: c.textMuted }}>
+            KPI + Gelir Grafiği + Durum Dağılımı + AI ile Analiz
+          </Text>
+        </View>
 
 
-      <ScrollView
-        contentContainerStyle={{
-          paddingTop: 10,
-          paddingHorizontal: 16,
-          paddingBottom: 24,
-        }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={c.textMuted}
-          />
-        }
-      >
-        <Segment
-          value={range}
-          onChange={(v) => {
-            setRange(v);
-            // range değişince otomatik useEffect -> load
+        <View className="px-4">
+          <Pressable
+            onPress={() => {
+              // Seçili aralığı (range) zaten dashboard hesaplıyor.
+              // Biz weeklyAnalyze’a payload’ı parametre olarak yollayacağız.
+
+              // range window (from/to) hesapla:
+              const { from, to } = getRangeWindow(range);
+
+              // dailyRevenue: chartData’dan üret (label değil, gerçek date lazım)
+              // Şimdilik hızlı MVP: chartData label yerine “range günleri” ile aynı sırada date üretiyoruz
+              const days = range === "today" ? 1 : range === "7d" ? 7 : 30;
+
+              const start = startOfDay(from);
+              const dailyRevenue = Array.from({ length: days }).map((_, i) => {
+                const day = addDays(start, i);
+                return {
+                  date: dateKey(day),
+                  value: state.chartData[i]?.value ?? 0,
+                };
+              });
+
+              const appointments = {
+                total: state.totalAppointments,
+                cancelled: state.pieStatus.CANCELED,
+                completed: state.pieStatus.COMPLETED,
+                pending: state.pieStatus.PENDING,
+              };
+
+              router.push({
+                pathname: "/(barber)/weeklyAnalyze",
+                params: {
+                  shopId: "main",
+                  rangeStart: dateKey(from),
+                  rangeEnd: dateKey(to),
+                  currency: "TRY",
+                  dailyRevenue: JSON.stringify(dailyRevenue),
+                  appointments: JSON.stringify(appointments),
+                  timeBuckets: JSON.stringify([]), // sonra doldururuz
+                },
+              });
+            }}
+            style={{
+              backgroundColor: c.accentSoft,
+              borderRadius: 16,
+              paddingVertical: 12,
+              alignItems: "center",
+              marginTop: 10,
+              marginBottom: 10,
+            }}
+          >
+            <Text style={{ color: c.accent, fontWeight: "800" }}>
+              AI ile Haftalık Analiz Al
+            </Text>
+          </Pressable>
+        </View>
+
+
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: 10,
+            paddingHorizontal: 16,
+            paddingBottom: 24,
           }}
-          c={c}
-        />
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={c.textMuted}
+            />
+          }
+        >
+          <Segment
+            value={range}
+            onChange={(v) => {
+              setRange(v);
+              // range değişince otomatik useEffect -> load
+            }}
+            c={c}
+          />
 
-        <View style={{ height: 14 }} />
+          <View style={{ height: 14 }} />
 
-        {loading ? (
-          <View style={{ paddingVertical: 24 }}>
-            <ActivityIndicator />
-          </View>
-        ) : (
-          <>
-            {/* KPI */}
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <KpiCard
-                  c={c}
-                  label="Seçili Aralık Gelir"
-                  value={currencyTRY(state.totalRevenue)}
-                  sub="(Tamamlanan randevular)"
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <KpiCard
-                  c={c}
-                  label="Randevu Sayısı"
-                  value={`${state.totalAppointments}`}
-                  sub={rangeTitle}
-                />
-              </View>
+          {loading ? (
+            <View style={{ paddingVertical: 24 }}>
+              <ActivityIndicator />
             </View>
-
-            <View style={{ height: 12 }} />
-
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <KpiCard c={c} label="İptal" value={`${state.pieStatus.CANCELED}`} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <KpiCard
-                  c={c}
-                  label="Onay Bekleyen"
-                  value={`${state.pieStatus.PENDING}`}
-                />
-              </View>
-            </View>
-
-            <View style={{ height: 14 }} />
-
-            {/* Line Chart */}
-            <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
-              <View
-                className="p-4"
-                onLayout={(e) => {
-                  const full = e.nativeEvent.layout.width;
-                  const innerPadding = 32;
-                  const yAxisLabelWidth = 44;
-                  const cw = Math.max(0, full - innerPadding - yAxisLabelWidth);
-                  setChartW(cw);
-                }}
-              >
-                <Text className="text-base font-bold" style={{ color: c.text }}>
-                  Gelir Trendi
-                </Text>
-                <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
-                  {rangeTitle}
-                </Text>
-
-                <View style={{ height: 12 }} />
-
-                {/* ✅ sabit yükseklikli container */}
-                <View style={{ width: "100%", height: 250 }}>
-                  {chartW > 0 && (
-                    <LineChart
-                      key={`${range}-${chartW}-${state.chartData.length}-${forceTick}`}
-                      data={downsampleLabels(
-                        state.chartData.map((x) => ({ value: x.value, label: x.label })),
-                        range
-                      )}
-                      width={chartW}
-                      height={200}
-                      areaChart
-                      curved
-                      hideRules
-                      yAxisLabelWidth={44}
-                      yAxisThickness={0}
-                      hideDataPoints={range === "30d"}
-                      xAxisThickness={0}
-                      showVerticalLines={false}
-                      initialSpacing={0}
-                      endSpacing={0}
-                      spacing={
-                        state.chartData.length > 1
-                          ? Math.max(1, chartW / (state.chartData.length - 1))
-                          : chartW
-                      }
-                      xAxisLabelsHeight={range === "30d" ? 0 : 18}
-                      xAxisLabelTextStyle={{ color: c.text, fontSize: 11 }}
-                      yAxisTextStyle={{ color: c.text, fontSize: 11 }}
-                      color={c.accent}
-                      thickness={3}
-                      startFillColor={c.accent}
-                      endFillColor={c.accent}
-                      startOpacity={0.18}
-                      endOpacity={0.02}
-                    />)
-
-                  }
-                  {range === "30d" && state.chartData.length > 0 && (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        paddingHorizontal: 4,
-                        marginTop: 8,
-                      }}
-                    >
-                      <Text style={{ color: c.textMuted, fontSize: 11 }}>
-                        {state.chartData[0]?.label}
-                      </Text>
-
-                      <Text style={{ color: c.textMuted, fontSize: 11 }}>
-                        {state.chartData[Math.floor(state.chartData.length / 2)]?.label}
-                      </Text>
-
-                      <Text style={{ color: c.textMuted, fontSize: 11 }}>
-                        {state.chartData[state.chartData.length - 1]?.label}
-                      </Text>
-                    </View>
-                  )}
+          ) : (
+            <>
+              {/* KPI */}
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <KpiCard
+                    c={c}
+                    label="Seçili Aralık Gelir"
+                    value={currencyTRY(state.totalRevenue)}
+                    sub="(Tamamlanan randevular)"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <KpiCard
+                    c={c}
+                    label="Randevu Sayısı"
+                    value={`${state.totalAppointments}`}
+                    sub={rangeTitle}
+                  />
                 </View>
               </View>
-            </Card>
 
-            <View style={{ height: 14 }} />
+              <View style={{ height: 12 }} />
 
-            {/* Pie Chart */}
-            <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
-              <View className="p-4">
-                <Text className="text-base font-bold" style={{ color: c.text }}>
-                  Durum Dağılımı
-                </Text>
-                <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
-                  {rangeTitle}
-                </Text>
-
-                <View style={{ height: 12 }} />
-
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <PieChart
-                    data={pieData}
-                    donut
-                    radius={92}
-                    innerRadius={50}
-                    showText={false}
-                    strokeColor={c.cardBg}
-                    strokeWidth={10}
-                    focusOnPress
-                    centerLabelComponent={() => (
-                      <View
-                        style={{
-                          width: 2 * 60,       // innerRadius * 2
-                          height: 2 * 60,      // innerRadius * 2
-                          borderRadius: 60,
-                          backgroundColor: c.surfaceBg,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Text key={cancelRate + "Header"} style={{ color: c.text, fontWeight: "700" }}>İptal Oranı</Text>
-                        {/* istersen merkezde text */}
-                        <Text key={cancelRate} style={{ color: c.text, fontWeight: "700" }}>%{cancelRate}</Text>
-                      </View>
-                    )}
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <KpiCard c={c} label="İptal" value={`${state.pieStatus.CANCELED}`} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <KpiCard
+                    c={c}
+                    label="Onay Bekleyen"
+                    value={`${state.pieStatus.PENDING}`}
                   />
+                </View>
+              </View>
 
-                  <View style={{ flex: 1, gap: 10 }}>
-                    {pieData.map((s) => (
+              <View style={{ height: 14 }} />
+
+              {/* Line Chart */}
+              <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+                <View
+                  className="p-4"
+                  onLayout={(e) => {
+                    const full = e.nativeEvent.layout.width;
+                    const innerPadding = 32;
+                    const yAxisLabelWidth = 44;
+                    const cw = Math.max(0, full - innerPadding - yAxisLabelWidth);
+                    setChartW(cw);
+                  }}
+                >
+                  <Text className="text-base font-bold" style={{ color: c.text }}>
+                    Gelir Trendi
+                  </Text>
+                  <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
+                    {rangeTitle}
+                  </Text>
+
+                  <View style={{ height: 12 }} />
+
+                  {/* ✅ sabit yükseklikli container */}
+                  <View style={{ width: "100%", height: 250 }}>
+                    {chartW > 0 && (
+                      <LineChart
+                        key={`${range}-${chartW}-${state.chartData.length}-${forceTick}`}
+                        data={downsampleLabels(
+                          state.chartData.map((x) => ({ value: x.value, label: x.label })),
+                          range
+                        )}
+                        width={chartW}
+                        height={200}
+                        areaChart
+                        curved
+                        hideRules
+                        yAxisLabelWidth={44}
+                        yAxisThickness={0}
+                        hideDataPoints={range === "30d"}
+                        xAxisThickness={0}
+                        showVerticalLines={false}
+                        initialSpacing={0}
+                        endSpacing={0}
+                        spacing={
+                          state.chartData.length > 1
+                            ? Math.max(1, chartW / (state.chartData.length - 1))
+                            : chartW
+                        }
+                        xAxisLabelsHeight={range === "30d" ? 0 : 18}
+                        xAxisLabelTextStyle={{ color: c.text, fontSize: 11 }}
+                        yAxisTextStyle={{ color: c.text, fontSize: 11 }}
+                        color={c.accent}
+                        thickness={3}
+                        startFillColor={c.accent}
+                        endFillColor={c.accent}
+                        startOpacity={0.18}
+                        endOpacity={0.02}
+                      />)
+
+                    }
+                    {range === "30d" && state.chartData.length > 0 && (
                       <View
-                        key={`${s.text}-" "${s.value}`}
                         style={{
                           flexDirection: "row",
-                          alignItems: "center",
                           justifyContent: "space-between",
-                          paddingVertical: 10,
-                          paddingHorizontal: 14,
-                          borderRadius: 14,
-                          borderWidth: 1,
-                          gap: 5,
-                          borderColor: c.surfaceBorder,
-                          backgroundColor: c.cardBg,
+                          paddingHorizontal: 4,
+                          marginTop: 8,
                         }}
                       >
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                          <View
-                            style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: 99,
-                              backgroundColor: s.color,
-                            }}
-                          />
-                          <Text style={{ color: c.text, fontWeight: "700" }}>{s.text}</Text>
-                        </View>
-                        <Text style={{ color: c.textMuted, fontWeight: "700" }}>{s.value}</Text>
+                        <Text style={{ color: c.textMuted, fontSize: 11 }}>
+                          {state.chartData[0]?.label}
+                        </Text>
+
+                        <Text style={{ color: c.textMuted, fontSize: 11 }}>
+                          {state.chartData[Math.floor(state.chartData.length / 2)]?.label}
+                        </Text>
+
+                        <Text style={{ color: c.textMuted, fontSize: 11 }}>
+                          {state.chartData[state.chartData.length - 1]?.label}
+                        </Text>
                       </View>
-                    ))}
+                    )}
                   </View>
                 </View>
-              </View>
-            </Card>
+              </Card>
 
-            <View style={{ height: 24 }} />
-          </>
-        )}
-      </ScrollView>
-    </View>
+              <View style={{ height: 14 }} />
+
+              {/* Pie Chart */}
+              <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+                <View className="p-4">
+                  <Text className="text-base font-bold" style={{ color: c.text }}>
+                    Durum Dağılımı
+                  </Text>
+                  <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
+                    {rangeTitle}
+                  </Text>
+
+                  <View style={{ height: 12 }} />
+
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <PieChart
+                      data={pieData}
+                      donut
+                      radius={92}
+                      innerRadius={50}
+                      showText={false}
+                      strokeColor={c.cardBg}
+                      strokeWidth={10}
+                      focusOnPress
+                      centerLabelComponent={() => (
+                        <View
+                          style={{
+                            width: 2 * 60,       // innerRadius * 2
+                            height: 2 * 60,      // innerRadius * 2
+                            borderRadius: 60,
+                            backgroundColor: c.surfaceBg,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text key={cancelRate + "Header"} style={{ color: c.text, fontWeight: "700" }}>İptal Oranı</Text>
+                          {/* istersen merkezde text */}
+                          <Text key={cancelRate} style={{ color: c.text, fontWeight: "700" }}>%{cancelRate}</Text>
+                        </View>
+                      )}
+                    />
+
+                    <View style={{ flex: 1, gap: 10 }}>
+                      {pieData.map((s) => (
+                        <View
+                          key={`${s.text}-" "${s.value}`}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            paddingVertical: 10,
+                            paddingHorizontal: 14,
+                            borderRadius: 14,
+                            borderWidth: 1,
+                            gap: 5,
+                            borderColor: c.surfaceBorder,
+                            backgroundColor: c.cardBg,
+                          }}
+                        >
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                            <View
+                              style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: 99,
+                                backgroundColor: s.color,
+                              }}
+                            />
+                            <Text style={{ color: c.text, fontWeight: "700" }}>{s.text}</Text>
+                          </View>
+                          <Text style={{ color: c.textMuted, fontWeight: "700" }}>{s.value}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              </Card>
+
+              <View style={{ height: 24 }} />
+            </>
+          )}
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 }
