@@ -6,7 +6,7 @@ import { colors } from "@/src/theme/colors";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, ImageBackground, Pressable, ScrollView, View } from "react-native";
 
 import {
   AppointmentItem,
@@ -290,6 +290,12 @@ export default function BarberHome() {
   const { effectiveTheme } = useAppTheme();
   const c = colors[effectiveTheme];
 
+  const BG_BY_THEME = {
+    light: require("@/src/assets/images/lightBG.png"),
+    dark: require("@/src/assets/images/darkBG.png"),
+  } as const;
+
+
   const [loading, setLoading] = useState(true);
 
   const [pending, setPending] = useState<AppointmentItem[]>([]);
@@ -300,6 +306,8 @@ export default function BarberHome() {
   const [openAll, setOpenAll] = useState(false);
 
   const [busyId, setBusyId] = useState<string | null>(null);
+
+
 
   // Realtime subscriptions
   useEffect(() => {
@@ -384,166 +392,171 @@ export default function BarberHome() {
   }, [today, pending]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.screenBg }}>
-      <View className="px-4 pt-10 pb-3">
-        <Text className="text-2xl pt-10 font-bold" style={{ color: c.text }}>
-          Bugün
-        </Text>
-        <Text className="text-sm mt-1" style={{ color: c.textMuted }}>
-          Randevularını hızlıca yönet.
-        </Text>
-      </View>
-
-      {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-          <Text className="mt-2" style={{ color: c.textMuted }}>
-            Yükleniyor...
+    <ImageBackground
+      source={BG_BY_THEME[effectiveTheme]}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <View style={{ flex: 1 }}>
+        <View className="px-4 pt-10 pb-3">
+          <Text className="text-2xl pt-10 font-bold" style={{ color: c.text }}>
+            Bugün
+          </Text>
+          <Text className="text-sm mt-1" style={{ color: c.textMuted }}>
+            Randevularını hızlıca yönet.
           </Text>
         </View>
-      ) : (
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View className="px-4" style={{ gap: 14 }}>
-            {/* Günün özeti tiles */}
-            <View className="flex-row" style={{ gap: 12 }}>
-              <StatTile
-                label="Bugün yapıldı"
-                value={`${summary.doneCount}`}
-                c={c}
-              />
-              <StatTile
-                label="Kalan"
-                value={`${summary.remainingCount}`}
-                c={c}
-              />
-            </View>
-            <View className="flex-row" style={{ gap: 10 }}>
-              <StatTile
-                label="Onay bekleyen"
-                value={`${summary.pendingCount}`}
-                c={c}
-              />
-              <StatTile
-                label="Toplam (bugün)"
-                value={`${today.length}`}
-                c={c}
-              />
-            </View>
 
-            {/* Sıradaki randevu */}
-            <Card
-              bg={c.surfaceBg}
-              border={c.surfaceBorder}
-              shadowColor={c.shadowColor}
-            >
-              <View className="p-4">
-                <View className="flex-row items-center justify-between">
-                  <Text
-                    className="text-base font-bold"
-                    style={{ color: c.text }}
-                  >
-                    Sıradaki Randevu
-                  </Text>
-                  <Ionicons
-                    name="arrow-forward"
-                    size={18}
-                    color={c.textMuted}
-                  />
-                </View>
+        {loading ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator />
+            <Text className="mt-2" style={{ color: c.textMuted }}>
+              Yükleniyor...
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View className="px-4" style={{ gap: 14 }}>
+              {/* Günün özeti tiles */}
+              <View className="flex-row" style={{ gap: 12 }}>
+                <StatTile
+                  label="Bugün yapıldı"
+                  value={`${summary.doneCount}`}
+                  c={c}
+                />
+                <StatTile
+                  label="Kalan"
+                  value={`${summary.remainingCount}`}
+                  c={c}
+                />
+              </View>
+              <View className="flex-row" style={{ gap: 10 }}>
+                <StatTile
+                  label="Onay bekleyen"
+                  value={`${summary.pendingCount}`}
+                  c={c}
+                />
+                <StatTile
+                  label="Toplam (bugün)"
+                  value={`${today.length}`}
+                  c={c}
+                />
+              </View>
 
-                {summary.next ? (
-                  <View className="mt-2">
+              {/* Sıradaki randevu */}
+              <Card
+                bg={c.surfaceBg}
+                border={c.surfaceBorder}
+                shadowColor={c.shadowColor}
+              >
+                <View className="p-4">
+                  <View className="flex-row items-center justify-between">
                     <Text
-                      className="text-sm font-semibold"
+                      className="text-base font-bold"
                       style={{ color: c.text }}
                     >
-                      {summary.next.serviceSnapshot?.name ?? "Hizmet"}
+                      Sıradaki Randevu
                     </Text>
-                    <Text
-                      className="text-sm mt-1"
-                      style={{ color: c.textMuted }}
-                    >
-                      {fmtDateTimeTR(toDate(summary.next.startAt))}
-                    </Text>
-                    <Text className="text-sm mt-1" style={{ color: c.text }}>
-                      {`${summary.next.userSnapshot?.name ?? ""} ${summary.next.userSnapshot?.surname ?? ""}`.trim() ||
-                        "Müşteri"}
-                    </Text>
+                    <Ionicons
+                      name="arrow-forward"
+                      size={18}
+                      color={c.textMuted}
+                    />
                   </View>
-                ) : (
-                  <Text className="text-sm mt-2" style={{ color: c.textMuted }}>
-                    Bugün sıradaki randevu yok.
-                  </Text>
-                )}
-              </View>
-            </Card>
 
-            {/* Collapsible: Onay Bekleyen */}
-            <CollapsibleHeader
-              title="Onay Bekleyenler"
-              subtitle="Yeni gelen randevular burada görünür"
-              count={pending.length}
-              open={openPending}
-              onToggle={() => setOpenPending((v) => !v)}
-              c={c}
-            />
-
-            <CollapsibleBody open={openPending}>
-              <View style={{ gap: 12, paddingHorizontal: 8, paddingBottom: 12 }}>
-                {pending.length === 0 ? (
-                  <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
-                    <View className="p-4 flex-row items-center">
-                      <Ionicons name="checkmark-done-outline" size={18} color={c.textMuted} />
-                      <Text className="ml-2" style={{ color: c.textMuted }}>
-                        Onay bekleyen randevu yok.
+                  {summary.next ? (
+                    <View className="mt-2">
+                      <Text
+                        className="text-sm font-semibold"
+                        style={{ color: c.text }}
+                      >
+                        {summary.next.serviceSnapshot?.name ?? "Hizmet"}
+                      </Text>
+                      <Text
+                        className="text-sm mt-1"
+                        style={{ color: c.textMuted }}
+                      >
+                        {fmtDateTimeTR(toDate(summary.next.startAt))}
+                      </Text>
+                      <Text className="text-sm mt-1" style={{ color: c.text }}>
+                        {`${summary.next.userSnapshot?.name ?? ""} ${summary.next.userSnapshot?.surname ?? ""}`.trim() ||
+                          "Müşteri"}
                       </Text>
                     </View>
-                  </Card>
-                ) : (
+                  ) : (
+                    <Text className="text-sm mt-2" style={{ color: c.textMuted }}>
+                      Bugün sıradaki randevu yok.
+                    </Text>
+                  )}
+                </View>
+              </Card>
 
-                  <View style={{ gap: 12 }}>
-                    {pending.map(item => (
-                      <View key={item.id} style={{ padding: 3 }}>
-                        <AppointmentCard
-                          key={item.id}
-                          item={item}
-                          c={c}
-                          busy={busyId === item.id}
-                          onConfirm={() => onConfirm(item.id)}
-                          onCancel={() => onCancel(item.id)}
-                        />
+              {/* Collapsible: Onay Bekleyen */}
+              <CollapsibleHeader
+                title="Onay Bekleyenler"
+                subtitle="Yeni gelen randevular burada görünür"
+                count={pending.length}
+                open={openPending}
+                onToggle={() => setOpenPending((v) => !v)}
+                c={c}
+              />
+
+              <CollapsibleBody open={openPending}>
+                <View style={{ gap: 12, paddingHorizontal: 8, paddingBottom: 12 }}>
+                  {pending.length === 0 ? (
+                    <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+                      <View className="p-4 flex-row items-center">
+                        <Ionicons name="checkmark-done-outline" size={18} color={c.textMuted} />
+                        <Text className="ml-2" style={{ color: c.textMuted }}>
+                          Onay bekleyen randevu yok.
+                        </Text>
                       </View>
-                    ))}
-                  </View>
+                    </Card>
+                  ) : (
 
-                )}
-              </View>
-            </CollapsibleBody>
-
-
-            {/* Collapsible: Tüm randevular */}
-            <CollapsibleHeader
-              title="Randevular"
-              subtitle="Burada tüm randevularını görebilirsin."
-              count={all.length}
-              open={openAll}
-              onToggle={() => setOpenAll((v) => !v)}
-              c={c}
-            />
-
-            <CollapsibleBody open={openAll}>
-              <View style={{ gap: 18, paddingBottom: 4, paddingHorizontal: 8 }}>
-                {all.length === 0 ? (
-                  <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
-                    <View className="p-4">
-                      <Text style={{ color: c.textMuted }}>Henüz randevu yok.</Text>
+                    <View style={{ gap: 12 }}>
+                      {pending.map(item => (
+                        <View key={item.id} style={{ padding: 3 }}>
+                          <AppointmentCard
+                            key={item.id}
+                            item={item}
+                            c={c}
+                            busy={busyId === item.id}
+                            onConfirm={() => onConfirm(item.id)}
+                            onCancel={() => onCancel(item.id)}
+                          />
+                        </View>
+                      ))}
                     </View>
-                  </Card>
-                ) : (
+
+                  )}
+                </View>
+              </CollapsibleBody>
+
+
+              {/* Collapsible: Tüm randevular */}
+              <CollapsibleHeader
+                title="Randevular"
+                subtitle="Burada tüm randevularını görebilirsin."
+                count={all.length}
+                open={openAll}
+                onToggle={() => setOpenAll((v) => !v)}
+                c={c}
+              />
+
+              <CollapsibleBody open={openAll}>
+                <View style={{ gap: 18, paddingBottom: 4, paddingHorizontal: 8 }}>
+                  {all.length === 0 ? (
+                    <Card bg={c.surfaceBg} border={c.surfaceBorder} shadowColor={c.shadowColor}>
+                      <View className="p-4">
+                        <Text style={{ color: c.textMuted }}>Henüz randevu yok.</Text>
+                      </View>
+                    </Card>
+                  ) : (
                     all.map((item) => (
                       <AppointmentCard
                         key={item.id}
@@ -555,13 +568,14 @@ export default function BarberHome() {
                       />
                     ))
 
-                )}
-              </View>
-            </CollapsibleBody>
+                  )}
+                </View>
+              </CollapsibleBody>
 
-          </View>
-        </ScrollView>
-      )}
-    </View>
+            </View>
+          </ScrollView>
+        )}
+      </View>
+    </ImageBackground>
   );
 }
