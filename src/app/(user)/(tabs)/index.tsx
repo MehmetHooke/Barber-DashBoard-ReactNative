@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  ImageBackground,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -27,6 +28,11 @@ import { getAuth } from "firebase/auth";
 export default function UserHome() {
   const { effectiveTheme } = useAppTheme();
   const c = colors[effectiveTheme];
+
+  const BG_BY_THEME = {
+    light: require("@/src/assets/images/theme/lightBG.png"),
+    dark: require("@/src/assets/images/theme/darkBG.png"),
+  } as const;
 
   const [services, setServices] = useState<ServiceDoc[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,70 +234,76 @@ export default function UserHome() {
   }, [services]);
 
   return (
-    <View className="flex-1 pt-10" style={{ backgroundColor: c.screenBg }}>
-      <View className="px-4 pt-5 pb-2">
-        <Text className="text-2xl font-bold" style={{ color: c.text }}>
-          Anasayfa
-        </Text>
-        <Text className="mt-1" style={{ color: c.textMuted }}>
-          Hızlıca hizmet seçip randevunu oluştur.
-        </Text>
-      </View>
-
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={c.textMuted}
-          />
-        }
-      >
-        {/* ✅ Slider burada: yaklaşan randevunun ÜSTÜ */}
-        {loading ? (
-          <View
-            className="mt-4 items-center justify-center"
-            style={{ height: 140 }}
-          >
-            <ActivityIndicator />
-            <Text className="text-xs mt-2" style={{ color: c.textMuted }}>
-              Hizmetler yükleniyor...
-            </Text>
-          </View>
-        ) : slides.length ? (
-          <View className="mt-4">
-            <UserHeroCarousel slides={slides} height={240} />
-          </View>
-        ) : null}
-
-        {/* Yaklaşan randevu */}
-        <View className="mt-5">
-          <Card
-            bg={c.surfaceBg}
-            border={c.surfaceBorder}
-            shadowColor={c.shadowColor}
-          >
-            <View className="p-4">
-              <View className="flex-row items-center justify-between">
-                <Text
-                  className="text-base font-semibold"
-                  style={{ color: c.text }}
-                >
-                  Yaklaşan Randevu
-                </Text>
-              </View>
-
-              {/* ✅ burası önemli */}
-              {upcomingContent}
-            </View>
-          </Card>
+    <ImageBackground
+      source={BG_BY_THEME[effectiveTheme]}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <View className="flex-1 pt-10">
+        <View className="px-4 pt-5 pb-2">
+          <Text className="text-2xl font-bold" style={{ color: c.text }}>
+            Anasayfa
+          </Text>
+          <Text className="mt-1" style={{ color: c.textMuted }}>
+            Hızlıca hizmet seçip randevunu oluştur.
+          </Text>
         </View>
 
-        <View className="h-8" />
-      </ScrollView>
-    </View>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={c.textMuted}
+            />
+          }
+        >
+          {/* ✅ Slider burada: yaklaşan randevunun ÜSTÜ */}
+          {loading ? (
+            <View
+              className="mt-4 items-center justify-center"
+              style={{ height: 140 }}
+            >
+              <ActivityIndicator />
+              <Text className="text-xs mt-2" style={{ color: c.textMuted }}>
+                Hizmetler yükleniyor...
+              </Text>
+            </View>
+          ) : slides.length ? (
+            <View className="mt-4">
+              <UserHeroCarousel slides={slides} height={240} />
+            </View>
+          ) : null}
+
+          {/* Yaklaşan randevu */}
+          <View className="mt-5">
+            <Card
+              bg={c.surfaceBg}
+              border={c.surfaceBorder}
+              shadowColor={c.shadowColor}
+            >
+              <View className="p-4">
+                <View className="flex-row items-center justify-between">
+                  <Text
+                    className="text-base font-semibold"
+                    style={{ color: c.text }}
+                  >
+                    Yaklaşan Randevu
+                  </Text>
+                </View>
+
+                {/* ✅ burası önemli */}
+                {upcomingContent}
+              </View>
+            </Card>
+          </View>
+
+          <View className="h-8" />
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 }
