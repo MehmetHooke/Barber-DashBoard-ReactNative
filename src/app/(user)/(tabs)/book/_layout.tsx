@@ -9,7 +9,7 @@ export default function BookStackLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: true,
+        headerShown: false,
         headerTitleAlign: "center",
 
         // 🔥 tema uyumlu header
