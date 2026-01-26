@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  ImageBackground,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -143,6 +144,11 @@ export default function MyAppointmentsScreen() {
   const { effectiveTheme } = useAppTheme();
   const c = colors[effectiveTheme];
 
+  const BG_BY_THEME = {
+    light: require("@/src/assets/images/theme/dasboardLight.png"),
+    dark: require("@/src/assets/images/theme/dashboardDark.png"),
+  } as const;
+
   // TODO: userId’yi auth context’inden al
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
@@ -228,138 +234,144 @@ export default function MyAppointmentsScreen() {
   }, [upcoming, c]);
 
   return (
-    <View className="flex-1 pt-10" style={{ backgroundColor: c.screenBg }}>
-      <View className="px-4 pt-5 pb-2">
-        <Text className="text-2xl font-bold" style={{ color: c.text }}>
-          Randevularım
-        </Text>
-        <Text className="mt-1" style={{ color: c.textMuted }}>
-          Randevularım
-        </Text>
-      </View>
+    <ImageBackground
+      source={BG_BY_THEME[effectiveTheme]}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <View className="flex-1 pt-10">
+        <View className="px-4 pt-5 pb-2">
+          <Text className="text-2xl font-bold" style={{ color: c.text }}>
+            Randevularım
+          </Text>
+          <Text className="mt-1" style={{ color: c.textMuted }}>
+            Randevularım
+          </Text>
+        </View>
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={c.textMuted}
-          />
-        }
-      >
-        {loading ? (
-          <View className="mt-8 items-center justify-center">
-            <ActivityIndicator />
-            <Text className="text-xs mt-2" style={{ color: c.textMuted }}>
-              Randevular yükleniyor...
-            </Text>
-          </View>
-        ) : (
-          <View className="mt-4">
-            {/* Yaklaşan (ÜSTTE) */}
-            <Card
-              bg={c.surfaceBg}
-              border={c.surfaceBorder}
-              shadowColor={c.shadowColor}
-            >
-              <View className="p-4">
-                <View className="flex-row items-center justify-between">
-                  <Text
-                    className="text-base font-semibold"
-                    style={{ color: c.text }}
-                  >
-                    Yaklaşan Randevular
-                  </Text>
-                </View>
-                {upcomingContent}
-              </View>
-            </Card>
-
-            {/* Geçmiş (Accordion) */}
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={c.textMuted}
+            />
+          }
+        >
+          {loading ? (
+            <View className="mt-8 items-center justify-center">
+              <ActivityIndicator />
+              <Text className="text-xs mt-2" style={{ color: c.textMuted }}>
+                Randevular yükleniyor...
+              </Text>
+            </View>
+          ) : (
             <View className="mt-4">
+              {/* Yaklaşan (ÜSTTE) */}
               <Card
                 bg={c.surfaceBg}
                 border={c.surfaceBorder}
                 shadowColor={c.shadowColor}
               >
                 <View className="p-4">
-                  <Pressable
-                    onPress={() => setPastOpen((s) => !s)}
-                    className="active:opacity-80"
-                  >
-                    <View className="flex-row items-center justify-between">
-                      <View>
-                        <Text
-                          className="text-base font-semibold"
-                          style={{ color: c.text }}
-                        >
-                          Geçmiş Randevularım
-                        </Text>
-                        <Text
-                          className="text-sm mt-1"
-                          style={{ color: c.textMuted }}
-                        >
-                          Toplam {pastCount} kayıt
-                        </Text>
-                      </View>
-
-                      <Text className="text-sm" style={{ color: c.textMuted }}>
-                        {pastOpen ? "Kapat ▼" : "Aç ▲"}
-                      </Text>
-                    </View>
-                  </Pressable>
-
-                  {pastOpen ? (
-                    <View className="mt-4">
-                      {pastCount === 0 ? (
-                        <View
-                          className="rounded-2xl border p-4"
-                          style={{ borderColor: c.surfaceBorder }}
-                        >
-                          <Text
-                            className="text-sm"
-                            style={{ color: c.textMuted }}
-                          >
-                            Henüz geçmiş randevun yok.
-                          </Text>
-                        </View>
-                      ) : (
-                        <FlatList
-                          data={past}
-                          keyExtractor={(x) => x.id}
-                          ItemSeparatorComponent={() => (
-                            <View className="h-3" />
-                          )}
-                          renderItem={({ item }) => (
-                            <AppointmentRow item={item} c={c} />
-                          )}
-                          scrollEnabled={false}
-                          refreshing={refreshing}
-                          onRefresh={onRefresh}
-                        />
-                      )}
-                    </View>
-                  ) : (
-                    <View
-                      className="mt-3 rounded-2xl border p-4"
-                      style={{ borderColor: c.surfaceBorder }}
+                  <View className="flex-row items-center justify-between">
+                    <Text
+                      className="text-base font-semibold"
+                      style={{ color: c.text }}
                     >
-                      <Text className="text-sm" style={{ color: c.textMuted }}>
-                        Geçmiş randevularını görmek için aç.
-                      </Text>
-                    </View>
-                  )}
+                      Yaklaşan Randevular
+                    </Text>
+                  </View>
+                  {upcomingContent}
                 </View>
               </Card>
-            </View>
 
-            <View className="h-8" />
-          </View>
-        )}
-      </ScrollView>
-    </View>
+              {/* Geçmiş (Accordion) */}
+              <View className="mt-4">
+                <Card
+                  bg={c.surfaceBg}
+                  border={c.surfaceBorder}
+                  shadowColor={c.shadowColor}
+                >
+                  <View className="p-4">
+                    <Pressable
+                      onPress={() => setPastOpen((s) => !s)}
+                      className="active:opacity-80"
+                    >
+                      <View className="flex-row items-center justify-between">
+                        <View>
+                          <Text
+                            className="text-base font-semibold"
+                            style={{ color: c.text }}
+                          >
+                            Geçmiş Randevularım
+                          </Text>
+                          <Text
+                            className="text-sm mt-1"
+                            style={{ color: c.textMuted }}
+                          >
+                            Toplam {pastCount} kayıt
+                          </Text>
+                        </View>
+
+                        <Text className="text-sm" style={{ color: c.textMuted }}>
+                          {pastOpen ? "Kapat ▼" : "Aç ▲"}
+                        </Text>
+                      </View>
+                    </Pressable>
+
+                    {pastOpen ? (
+                      <View className="mt-4">
+                        {pastCount === 0 ? (
+                          <View
+                            className="rounded-2xl border p-4"
+                            style={{ borderColor: c.surfaceBorder }}
+                          >
+                            <Text
+                              className="text-sm"
+                              style={{ color: c.textMuted }}
+                            >
+                              Henüz geçmiş randevun yok.
+                            </Text>
+                          </View>
+                        ) : (
+                          <FlatList
+                            data={past}
+                            keyExtractor={(x) => x.id}
+                            ItemSeparatorComponent={() => (
+                              <View className="h-3" />
+                            )}
+                            renderItem={({ item }) => (
+                              <AppointmentRow item={item} c={c} />
+                            )}
+                            scrollEnabled={false}
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                          />
+                        )}
+                      </View>
+                    ) : (
+                      <View
+                        className="mt-3 rounded-2xl border p-4"
+                        style={{ borderColor: c.surfaceBorder }}
+                      >
+                        <Text className="text-sm" style={{ color: c.textMuted }}>
+                          Geçmiş randevularını görmek için aç.
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </Card>
+              </View>
+
+              <View className="h-8" />
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 }
