@@ -22,16 +22,16 @@ export default function Index() {
             const profile = await getUserDoc(user.uid);
             const role = profile?.role;
           if(role === "BARBER"){
-            router.replace("/(barber)");
+            router.replace("/(barber)/(tabs)");
           }
           else{
-            router.replace("/(user)");
+            router.replace("/(user)/(tabs)");
           }
 
 
         } catch (err) {
           Alert.alert(`Hata ! ${err}`)
-          router.replace("/(user)")
+          router.replace("/(user)/(tabs)")
         }
         finally{
         setChecking(false);

@@ -291,8 +291,8 @@ export default function BarberHome() {
   const c = colors[effectiveTheme];
 
   const BG_BY_THEME = {
-    light: require("@/src/assets/images/lightBG.png"),
-    dark: require("@/src/assets/images/darkBG.png"),
+    light: require("@/src/assets/images/theme/lightBG.png"),
+    dark: require("@/src/assets/images/theme/darkBG.png"),
   } as const;
 
 

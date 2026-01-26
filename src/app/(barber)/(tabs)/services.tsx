@@ -4,6 +4,7 @@ import {
   Alert,
   FlatList,
   Image,
+  ImageBackground,
   Pressable,
   RefreshControl,
   TextInput,
@@ -46,6 +47,11 @@ export default function ServicesManage() {
   const { effectiveTheme } = useAppTheme();
   const c = colors[effectiveTheme];
 
+  const BG_BY_THEME = {
+    light: require("@/src/assets/images/theme/hizmetLight.png"),
+    dark: require("@/src/assets/images/theme/hizmetdark.png"),
+  } as const;
+
   const [services, setServices] = useState<ServiceDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,7 +73,8 @@ export default function ServicesManage() {
   const [uploadingKey, setUploadingKey] = useState<string | null>(null); // "new" | serviceId | null
   const [savingKey, setSavingKey] = useState<string | null>(null); // "new" | serviceId | null
 
-   const { alert } = useAppAlert();
+
+  const { alert } = useAppAlert();
   async function load() {
     try {
       const list = await getActiveServices(SHOP_ID);
@@ -289,236 +296,242 @@ export default function ServicesManage() {
   }
 
   return (
-    <View className="flex-1 pt-10" style={{ backgroundColor: c.screenBg }}>
-      {/* Header */}
-      <View className="px-4 pt-10 pb-3">
-        <Text className="text-2xl font-bold" style={{ color: c.text }}>
-          Hizmetler
-        </Text>
-        <Text className="mt-1" style={{ color: c.textMuted }}>
-          Yeni hizmet ekle, mevcut hizmetleri düzenle.
-        </Text>
-      </View>
-      <FlatList
-        data={services}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingBottom: 24,
-          gap: 12,
-        }}
-        ListEmptyComponent={
-          <Card
-            bg={c.surfaceBg}
-            border={c.surfaceBorder}
-            shadowColor={c.shadowColor}
-          >
-            <View className="px-4 py-4">
-              <Text className="font-semibold" style={{ color: c.text }}>
-                Henüz mevcut hizmet yok
-              </Text>
-              <Text className="mt-1" style={{ color: c.textMuted }}>
-                Yukarıdan yeni hizmet ekleyebilirsin.
-              </Text>
-            </View>
-          </Card>
-        }
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListHeaderComponent={
-          <View className="gap-4">
-            {/* ✅ Bölüm 1: Yeni Hizmet Ekle */}
-            <SectionTitle
-              c={c}
-              title="Yeni Hizmet Ekle"
-              subtitle="Yeni bir hizmet oluşturmak için aşağıdan ekle."
-            />
-
-            <AnimatedAccordionCard
-              c={c}
-              title="Hizmet Oluştur"
-              subtitle="Yeni bir hizmet ekle"
-              open={openKey === "new"}
-              onToggle={() => toggle("new")}
+    <ImageBackground
+      source={BG_BY_THEME[effectiveTheme]}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <View className="flex-1 pt-10">
+        {/* Header */}
+        <View className="px-4 pt-10 pb-3">
+          <Text className="text-2xl font-bold" style={{ color: c.text }}>
+            Hizmetler
+          </Text>
+          <Text className="mt-1" style={{ color: c.textMuted }}>
+            Yeni hizmet ekle, mevcut hizmetleri düzenle.
+          </Text>
+        </View>
+        <FlatList
+          data={services}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: 24,
+            gap: 12,
+          }}
+          ListEmptyComponent={
+            <Card
+              bg={c.surfaceBg}
+              border={c.surfaceBorder}
+              shadowColor={c.shadowColor}
             >
-              <ServiceForm
+              <View className="px-4 py-4">
+                <Text className="font-semibold" style={{ color: c.text }}>
+                  Henüz mevcut hizmet yok
+                </Text>
+                <Text className="mt-1" style={{ color: c.textMuted }}>
+                  Yukarıdan yeni hizmet ekleyebilirsin.
+                </Text>
+              </View>
+            </Card>
+          }
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListHeaderComponent={
+            <View className="gap-4">
+              {/* ✅ Bölüm 1: Yeni Hizmet Ekle */}
+              <SectionTitle
                 c={c}
-                draft={newDraft}
-                setDraft={setNewDraft}
-                imageUploading={uploadingKey === "new"}
-                onPickImage={() => pickImageFor("new")}
+                title="Yeni Hizmet Ekle"
+                subtitle="Yeni bir hizmet oluşturmak için aşağıdan ekle."
               />
 
-              <Pressable
-                disabled={!canCreate || savingKey === "new"}
-                onPress={onCreate}
-              >
-                <View
-                  className="rounded-2xl py-4 items-center justify-center border mt-3"
-                  style={{
-                    backgroundColor:
-                      !canCreate || savingKey === "new"
-                        ? "transparent"
-                        : c.accentSoft,
-                    borderColor:
-                      !canCreate || savingKey === "new"
-                        ? c.surfaceBorder
-                        : c.accentBorder,
-                    opacity: !canCreate || savingKey === "new" ? 0.6 : 1,
-                  }}
-                >
-                  {savingKey === "new" ? (
-                    <View className="flex-row items-center">
-                      <ActivityIndicator />
-                      <Text
-                        className="ml-2 font-semibold"
-                        style={{ color: c.textMuted }}
-                      >
-                        Kaydediliyor...
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text className="font-semibold" style={{ color: c.accent }}>
-                      Hizmeti Oluştur
-                    </Text>
-                  )}
-                </View>
-              </Pressable>
-
-              <View className="h-2" />
-            </AnimatedAccordionCard>
-
-            {/* ✅ Ayırıcı çizgi + Bölüm 2 başlığı */}
-            <View
-              className="h-px"
-              style={{ backgroundColor: c.surfaceBorder }}
-            />
-
-            <SectionTitle
-              c={c}
-              title="Mevcut Hizmetler"
-              subtitle="Düzenlemek için bir hizmete dokun."
-            />
-
-            {/* küçük boşluk */}
-            <View className="h-1" />
-          </View>
-        }
-        renderItem={({ item }) => {
-          const d = drafts[item.id];
-          const open = openKey === item.id;
-
-          const changed = d ? isChanged(item, d) : false;
-          const canUpdate = d ? changed && validDraft(d) : false;
-
-          return (
-            <>
               <AnimatedAccordionCard
                 c={c}
-                title={item.name}
-                subtitle={`${item.durationMin} dk • ${item.price} ₺`}
-                open={open}
-                onToggle={() => toggle(item.id)}
-                leading={<ServiceThumb uri={item.imageUrl ?? null} c={c} />} 
+                title="Hizmet Oluştur"
+                subtitle="Yeni bir hizmet ekle"
+                open={openKey === "new"}
+                onToggle={() => toggle("new")}
               >
-                {/* draft yoksa ilk açılışta init ediliyor; ama güvenli olsun diye fallback */}
                 <ServiceForm
                   c={c}
-                  draft={
-                    d ?? {
-                      name: item.name,
-                      description: item.description,
-                      durationMin: String(item.durationMin),
-                      price: String(item.price),
-                      imageUrl: item.imageUrl ?? null,
-                    }
-                  }
-                  setDraft={(updater: React.SetStateAction<Draft>) =>
-                    setDrafts((prev) => {
-                      const current = prev[item.id] ?? {
-                        name: item.name,
-                        description: item.description,
-                        durationMin: String(item.durationMin),
-                        price: String(item.price),
-                        imageUrl: item.imageUrl ?? null,
-                      };
-
-                      const next =
-                        typeof updater === "function"
-                          ? updater(current)
-                          : updater;
-
-                      return { ...prev, [item.id]: next };
-                    })
-                  }
-                  imageUploading={uploadingKey === item.id}
-                  onPickImage={() => pickImageFor(item.id)}
-                  placeholders={{
-                    name: item.name,
-                    description: item.description,
-                    durationMin: String(item.durationMin),
-                    price: String(item.price),
-                  }}
+                  draft={newDraft}
+                  setDraft={setNewDraft}
+                  imageUploading={uploadingKey === "new"}
+                  onPickImage={() => pickImageFor("new")}
                 />
 
                 <Pressable
-                  disabled={!canUpdate || savingKey === item.id}
-                  onPress={() => onUpdate(item)}
+                  disabled={!canCreate || savingKey === "new"}
+                  onPress={onCreate}
                 >
                   <View
                     className="rounded-2xl py-4 items-center justify-center border mt-3"
                     style={{
                       backgroundColor:
-                        !canUpdate || savingKey === item.id
+                        !canCreate || savingKey === "new"
                           ? "transparent"
                           : c.accentSoft,
                       borderColor:
-                        !canUpdate || savingKey === item.id
+                        !canCreate || savingKey === "new"
                           ? c.surfaceBorder
                           : c.accentBorder,
-                      opacity: !canUpdate || savingKey === item.id ? 0.6 : 1,
+                      opacity: !canCreate || savingKey === "new" ? 0.6 : 1,
                     }}
                   >
-                    {savingKey === item.id ? (
+                    {savingKey === "new" ? (
                       <View className="flex-row items-center">
                         <ActivityIndicator />
                         <Text
                           className="ml-2 font-semibold"
                           style={{ color: c.textMuted }}
                         >
-                          Güncelleniyor...
+                          Kaydediliyor...
                         </Text>
                       </View>
                     ) : (
-                      <Text
-                        className="font-semibold"
-                        style={{ color: c.accent }}
-                      >
-                        Hizmeti Güncelle
+                      <Text className="font-semibold" style={{ color: c.accent }}>
+                        Hizmeti Oluştur
                       </Text>
                     )}
                   </View>
                 </Pressable>
 
-                {!changed ? (
-                  <Text className="mt-2 text-xs" style={{ color: c.textMuted }}>
-                    Değişiklik yok.
-                  </Text>
-                ) : !canUpdate ? (
-                  <Text className="mt-2 text-xs" style={{ color: c.textMuted }}>
-                    Güncellemek için alanları geçerli doldur (görsel dahil).
-                  </Text>
-                ) : null}
-
                 <View className="h-2" />
               </AnimatedAccordionCard>
-            </>
-          );
-        }}
-        ItemSeparatorComponent={() => <View className="h-0" />}
-      />
-    </View>
+
+              {/* ✅ Ayırıcı çizgi + Bölüm 2 başlığı */}
+              <View
+                className="h-px"
+                style={{ backgroundColor: c.surfaceBorder }}
+              />
+
+              <SectionTitle
+                c={c}
+                title="Mevcut Hizmetler"
+                subtitle="Düzenlemek için bir hizmete dokun."
+              />
+
+              {/* küçük boşluk */}
+              <View className="h-1" />
+            </View>
+          }
+          renderItem={({ item }) => {
+            const d = drafts[item.id];
+            const open = openKey === item.id;
+
+            const changed = d ? isChanged(item, d) : false;
+            const canUpdate = d ? changed && validDraft(d) : false;
+
+            return (
+              <>
+                <AnimatedAccordionCard
+                  c={c}
+                  title={item.name}
+                  subtitle={`${item.durationMin} dk • ${item.price} ₺`}
+                  open={open}
+                  onToggle={() => toggle(item.id)}
+                  leading={<ServiceThumb uri={item.imageUrl ?? null} c={c} />}
+                >
+                  {/* draft yoksa ilk açılışta init ediliyor; ama güvenli olsun diye fallback */}
+                  <ServiceForm
+                    c={c}
+                    draft={
+                      d ?? {
+                        name: item.name,
+                        description: item.description,
+                        durationMin: String(item.durationMin),
+                        price: String(item.price),
+                        imageUrl: item.imageUrl ?? null,
+                      }
+                    }
+                    setDraft={(updater: React.SetStateAction<Draft>) =>
+                      setDrafts((prev) => {
+                        const current = prev[item.id] ?? {
+                          name: item.name,
+                          description: item.description,
+                          durationMin: String(item.durationMin),
+                          price: String(item.price),
+                          imageUrl: item.imageUrl ?? null,
+                        };
+
+                        const next =
+                          typeof updater === "function"
+                            ? updater(current)
+                            : updater;
+
+                        return { ...prev, [item.id]: next };
+                      })
+                    }
+                    imageUploading={uploadingKey === item.id}
+                    onPickImage={() => pickImageFor(item.id)}
+                    placeholders={{
+                      name: item.name,
+                      description: item.description,
+                      durationMin: String(item.durationMin),
+                      price: String(item.price),
+                    }}
+                  />
+
+                  <Pressable
+                    disabled={!canUpdate || savingKey === item.id}
+                    onPress={() => onUpdate(item)}
+                  >
+                    <View
+                      className="rounded-2xl py-4 items-center justify-center border mt-3"
+                      style={{
+                        backgroundColor:
+                          !canUpdate || savingKey === item.id
+                            ? "transparent"
+                            : c.accentSoft,
+                        borderColor:
+                          !canUpdate || savingKey === item.id
+                            ? c.surfaceBorder
+                            : c.accentBorder,
+                        opacity: !canUpdate || savingKey === item.id ? 0.6 : 1,
+                      }}
+                    >
+                      {savingKey === item.id ? (
+                        <View className="flex-row items-center">
+                          <ActivityIndicator />
+                          <Text
+                            className="ml-2 font-semibold"
+                            style={{ color: c.textMuted }}
+                          >
+                            Güncelleniyor...
+                          </Text>
+                        </View>
+                      ) : (
+                        <Text
+                          className="font-semibold"
+                          style={{ color: c.accent }}
+                        >
+                          Hizmeti Güncelle
+                        </Text>
+                      )}
+                    </View>
+                  </Pressable>
+
+                  {!changed ? (
+                    <Text className="mt-2 text-xs" style={{ color: c.textMuted }}>
+                      Değişiklik yok.
+                    </Text>
+                  ) : !canUpdate ? (
+                    <Text className="mt-2 text-xs" style={{ color: c.textMuted }}>
+                      Güncellemek için alanları geçerli doldur (görsel dahil).
+                    </Text>
+                  ) : null}
+
+                  <View className="h-2" />
+                </AnimatedAccordionCard>
+              </>
+            );
+          }}
+          ItemSeparatorComponent={() => <View className="h-0" />}
+        />
+      </View>
+    </ImageBackground>
   );
 }
 
