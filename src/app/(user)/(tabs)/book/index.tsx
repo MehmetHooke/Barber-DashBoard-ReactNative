@@ -23,8 +23,8 @@ export default function BookIndex() {
   const c = colors[effectiveTheme];
 
   const BG_BY_THEME = {
-    light: require("@/src/assets/images/theme/dasboardLight.png"),
-    dark: require("@/src/assets/images/theme/dashboardDark.png"),
+    light: require("@/src/assets/images/theme/lightBG.png"),
+    dark: require("@/src/assets/images/theme/darkBG.png"),
   } as const;
 
   const router = useRouter();
