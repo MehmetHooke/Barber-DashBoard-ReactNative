@@ -18,10 +18,36 @@
       "passwordRequired": "Şifre zorunlu.",
       "passwordMin": "Şifre en az 6 karakter olmalı."
     },
+     "registerPage": {
+      "title": "Kayıt Ol",
+      "name": "İsim",
+      "surname": "Soyisim",
+      "phone": "Telefon",
+      "email": "Eposta",
+      "password": "Şifre",
+      "passwordRepeat": "Şifre tekrar",
+      "cta": "Hesap oluştur",
+      "creating": "Hesap Oluşturuluyor...",
+      "haveAccount": "Zaten hesabın var mı ?",
+      "goLogin": "Giriş yap",
+
+      "validation": {
+        "nameRequired": "İsim girilmesi zorunludur",
+        "surnameRequired": "Soyisim girilmesi zorunludur",
+        "phoneRequired": "Telefon girilmesi zorunludur",
+        "emailRequired": "Eposta girilmesi zorunludur",
+        "emailInvalid": "Email formatı hatalı.",
+        "passwordRequired": "Şifre girilmesi zorunludur",
+        "passwordMin": "Şifre en az 6 karakter olmalı.",
+        "passwordsNotMatch": "Şifreler birbiri ile eşleşmiyor."
+      }
+    },
 
     "language": {
       "tr": "Türkçe",
       "en": "English"
     }
   }
+  
 }
+

@@ -18,11 +18,13 @@ import { VStack } from "@/components/ui/vstack";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { registerWithEmail } from "@/src/services/auth.service";
+import { useTranslation } from "react-i18next";
 
 export default function Register() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
+  const { t } = useTranslation();
   const [name, setName] = React.useState("");
   const [surname, setSurname] = React.useState("");
   const [phone, setPhone] = React.useState("");
@@ -32,21 +34,20 @@ export default function Register() {
   const togglePassword = () => setShowPassword((p) => !p);
 
   function validate() {
-    if (!name.trim()) return "İsim zorunlu.";
-    if (!surname.trim()) return "Soyisim zorunlu.";
-    if (!phone.trim()) return "Telefon zorunlu.";
-    if (phone.trim().length < 10) return "Telefon en az 10 hane olmalı.";
-    if (!email.trim()) return "Email zorunlu.";
-    if (!email.includes("@")) return "Email formatı hatalı.";
-    if (!password.trim()) return "Şifre zorunlu.";
-    if (password.trim().length < 6) return "Şifre en az 6 karakter olmalı.";
+  if (!name.trim()) return t("auth.registerPage.validation.nameRequired");
+  if (!surname.trim()) return t("auth.registerPage.validation.surnameRequired");
+  if (!phone.trim()) return t("auth.registerPage.validation.phoneRequired");
+  if (!email.trim()) return t("auth.registerPage.validation.emailRequired");
+  if (!email.includes("@")) return t("auth.registerPage.validation.emailInvalid");
+  if (!password.trim()) return t("auth.registerPage.validation.passwordRequired");
+  if (password.trim().length < 6) return t("auth.registerPage.validation.passwordMin");
     return null;
   }
 
   async function onSubmit() {
     const error = validate();
     if (error) {
-      Alert.alert("Hata", error);
+      Alert.alert(t("auth.errorTitle"), error);
       return;
     }
 
@@ -93,7 +94,7 @@ export default function Register() {
               <View style={{ flex: 1,justifyContent:"center", paddingHorizontal: 24, paddingTop: 80, paddingBottom: 24 }}>
                 <VStack space="xs">
                   <Text className="text-white text-3xl font-bold mb-6">
-                    Kayıt Ol
+                    {t("auth.registerPage.title")}
                   </Text>
 
                   <Input
@@ -101,7 +102,7 @@ export default function Register() {
                     className="mb-4 bg-zinc-900/90 border border-zinc-700"
                   >
                     <InputField
-                      placeholder="İsim"
+                      placeholder={t("auth.registerPage.name")}
                       placeholderTextColor="#9ca3af"
                       className="text-white"
                       value={name}
@@ -116,7 +117,7 @@ export default function Register() {
                     className="mb-4 bg-zinc-900/90 border border-zinc-700"
                   >
                     <InputField
-                      placeholder="Soyisim"
+                      placeholder={t("auth.registerPage.surname")}
                       placeholderTextColor="#9ca3af"
                       className="text-white"
                       value={surname}
@@ -133,7 +134,7 @@ export default function Register() {
                     <InputField
                       inputMode="numeric"
                       keyboardType="number-pad"
-                      placeholder="Telefon"
+                      placeholder={t("auth.registerPage.phone")}
                       placeholderTextColor="#9ca3af"
                       className="text-white"
                       value={phone}
@@ -147,7 +148,7 @@ export default function Register() {
                     className="mb-4 bg-zinc-900/90 border border-zinc-700"
                   >
                     <InputField
-                      placeholder="Email"
+                      placeholder={t("auth.registerPage.email")}
                       placeholderTextColor="#9ca3af"
                       className="text-white"
                       value={email}
@@ -163,7 +164,7 @@ export default function Register() {
                     className="mb-6 bg-zinc-900/90 border border-zinc-700"
                   >
                     <InputField
-                      placeholder="Şifre"
+                      placeholder={t("auth.registerPage.password")}
                       placeholderTextColor="#9ca3af"
                       className="text-white"
                       value={password}
@@ -183,7 +184,7 @@ export default function Register() {
                     isDisabled={loading}
                   >
                     <Text className="text-white font-semibold">
-                      {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
+                      {loading ? t("auth.registerPage.creating") : t("auth.registerPage.cta")}
                     </Text>
                   </Button>
 
@@ -194,7 +195,8 @@ export default function Register() {
                     isDisabled={loading}
                   >
                     <Text className="text-white/70">
-                      Zaten hesabın var mı? Giriş yap
+                      {t("auth.registerPage.haveAccount") }{" "}
+                      <Text className="underline font-semibold">{t("auth.registerPage.goLogin")}</Text>
                     </Text>
                   </Button>
                 </VStack>
