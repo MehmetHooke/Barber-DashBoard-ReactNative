@@ -1,0 +1,27 @@
+{
+  "auth": {
+    "welcome": "Hoş Geldin",
+    "emailPlaceholder": "Eposta",
+    "passwordPlaceholder": "Şifre",
+    "login": "Giriş yap",
+    "loggingIn": "Giriş yapılıyor...",
+    "noAccount": "Hesabın yok mu?",
+    "register": "Kayıt ol",
+
+    "errorTitle": "Hata",
+    "loginFailed": "Giriş başarısız",
+    "unknownError": "Bilinmeyen hata",
+
+    "validation": {
+      "emailRequired": "Email zorunlu.",
+      "emailInvalid": "Email formatı hatalı.",
+      "passwordRequired": "Şifre zorunlu.",
+      "passwordMin": "Şifre en az 6 karakter olmalı."
+    },
+
+    "language": {
+      "tr": "Türkçe",
+      "en": "English"
+    }
+  }
+}

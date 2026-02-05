@@ -1,8 +1,8 @@
-import "react-native-gesture-handler";
-
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
+import "@/src/i18n/i18n";
 import { Stack } from "expo-router";
+import "react-native-gesture-handler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppAlertProvider } from "../components/AppAlertProvider";

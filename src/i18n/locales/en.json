@@ -1,0 +1,27 @@
+{
+  "auth": {
+    "welcome": "Welcome",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "login": "Sign in",
+    "loggingIn": "Signing in...",
+    "noAccount": "Don't have an account?",
+    "register": "Sign up",
+
+    "errorTitle": "Error",
+    "loginFailed": "Login failed",
+    "unknownError": "Unknown error",
+
+    "validation": {
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Invalid email format.",
+      "passwordRequired": "Password is required.",
+      "passwordMin": "Password must be at least 6 characters."
+    },
+
+    "language": {
+      "tr": "Türkçe",
+      "en": "English"
+    }
+  }
+}
