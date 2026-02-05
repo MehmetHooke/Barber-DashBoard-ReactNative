@@ -2,29 +2,41 @@ import { router } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
+import { loadAppLanguage } from "../i18n/language";
 import { auth } from "../lib/firebase";
 import { getUserDoc } from "../services/user.service";
 
 
 export default function Index() {
   const [checking, setChecking] = useState(true);
-  
+
+  const [langReady, setLangReady] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      await loadAppLanguage();
+      setLangReady(true);
+    })();
+  }, []);
+
+  if (!langReady) return null;
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-        
+
       if (!user) {
         router.replace("/(auth)/login");
         setChecking(false);
         return;
       }
-      (async()=>{
+      (async () => {
         try {
-            const profile = await getUserDoc(user.uid);
-            const role = profile?.role;
-          if(role === "BARBER"){
+          const profile = await getUserDoc(user.uid);
+          const role = profile?.role;
+          if (role === "BARBER") {
             router.replace("/(barber)/(tabs)");
           }
-          else{
+          else {
             router.replace("/(user)/(tabs)");
           }
 
@@ -33,8 +45,8 @@ export default function Index() {
           Alert.alert(`Hata ! ${err}`)
           router.replace("/(user)/(tabs)")
         }
-        finally{
-        setChecking(false);
+        finally {
+          setChecking(false);
         }
       })();
       setChecking(false);

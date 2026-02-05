@@ -12,6 +12,8 @@ import type { UserDoc } from "@/src/types/user";
 
 import { useAppAlert } from "@/src/components/AppAlertProvider";
 import Card from "@/src/components/Card";
+import i18n from "@/src/i18n/i18n";
+import { setAppLanguage } from "@/src/i18n/language";
 import { useAppTheme } from "@/src/theme/ThemeProvider";
 import { colors } from "@/src/theme/colors";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -157,6 +159,26 @@ export default function UserSettings() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const { confirm, alert } = useAppAlert();
+
+  const [lang, setLang] = useState<"tr" | "en">(
+    (i18n.language === "en" ? "en" : "tr")
+  );
+  useEffect(() => {
+    const onChange = (lng: string) => setLang(lng === "en" ? "en" : "tr");
+    i18n.on("languageChanged", onChange);
+    return () => {
+      i18n.off("languageChanged", onChange);
+    };
+  }, []);
+
+  async function onChangeLanguage(next: "tr" | "en") {
+    try {
+      // persist istemiyorsan: await i18n.changeLanguage(next);
+      await setAppLanguage(next);
+    } catch {
+      alert("Hata", "Dil değiştirilemedi.");
+    }
+  }
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
@@ -372,6 +394,60 @@ export default function UserSettings() {
                 </View>
               </View>
             </Card>
+
+            {/* Language */}
+            <SectionTitle title="DİL" color={c.textMuted} />
+            <Card
+              bg={c.surfaceBg}
+              border={c.surfaceBorder}
+              shadowColor={c.shadowColor}
+            >
+              <View className="px-4 py-4">
+                <View className="flex-row items-center">
+                  <View
+                    className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+                    style={{ backgroundColor: c.accentSoft }}
+                  >
+                    <Ionicons name="language-outline" size={18} color={c.accent} />
+                  </View>
+
+                  <View className="flex-1">
+                    <Text className="font-semibold" style={{ color: c.text }}>
+                      Dil
+                    </Text>
+                    <Text className="text-xs mt-1" style={{ color: c.textMuted }}>
+                      {lang === "tr" ? "Türkçe" : "English"}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="flex-row gap-2 mt-3">
+                  <ThemePill
+                    label="Türkçe"
+                    selected={lang === "tr"}
+                    onPress={() => onChangeLanguage("tr")}
+                    accent={c.accent}
+                    accentSoft={c.accentSoft}
+                    accentBorder={c.accentBorder}
+                    borderDefault={c.surfaceBorder}
+                    textColor={c.text}
+                    mutedColor={c.textMuted}
+                  />
+                  <ThemePill
+                    label="English"
+                    selected={lang === "en"}
+                    onPress={() => onChangeLanguage("en")}
+                    accent={c.accent}
+                    accentSoft={c.accentSoft}
+                    accentBorder={c.accentBorder}
+                    borderDefault={c.surfaceBorder}
+                    textColor={c.text}
+                    mutedColor={c.textMuted}
+                  />
+                </View>
+              </View>
+            </Card>
+
 
             {/* Other */}
             <SectionTitle title="DİĞER" color={c.textMuted} />
