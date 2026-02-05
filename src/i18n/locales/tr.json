@@ -1,53 +1,69 @@
 {
-  "auth": {
-    "welcome": "Hoş Geldin",
-    "emailPlaceholder": "Eposta",
-    "passwordPlaceholder": "Şifre",
-    "login": "Giriş yap",
-    "loggingIn": "Giriş yapılıyor...",
-    "noAccount": "Hesabın yok mu?",
-    "register": "Kayıt ol",
-
-    "errorTitle": "Hata",
-    "loginFailed": "Giriş başarısız",
-    "unknownError": "Bilinmeyen hata",
-
-    "validation": {
-      "emailRequired": "Email zorunlu.",
-      "emailInvalid": "Email formatı hatalı.",
-      "passwordRequired": "Şifre zorunlu.",
-      "passwordMin": "Şifre en az 6 karakter olmalı."
+    "auth": {
+        "welcome": "Hoş Geldin",
+        "emailPlaceholder": "Eposta",
+        "passwordPlaceholder": "Şifre",
+        "login": "Giriş yap",
+        "loggingIn": "Giriş yapılıyor...",
+        "noAccount": "Hesabın yok mu?",
+        "register": "Kayıt ol",
+        "errorTitle": "Hata",
+        "loginFailed": "Giriş başarısız",
+        "unknownError": "Bilinmeyen hata",
+        "validation": {
+            "emailRequired": "Email zorunlu.",
+            "emailInvalid": "Email formatı hatalı.",
+            "passwordRequired": "Şifre zorunlu.",
+            "passwordMin": "Şifre en az 6 karakter olmalı."
+        },
+        "registerPage": {
+            "title": "Kayıt Ol",
+            "name": "İsim",
+            "surname": "Soyisim",
+            "phone": "Telefon",
+            "email": "Eposta",
+            "password": "Şifre",
+            "passwordRepeat": "Şifre tekrar",
+            "cta": "Hesap oluştur",
+            "creating": "Hesap Oluşturuluyor...",
+            "haveAccount": "Zaten hesabın var mı ?",
+            "goLogin": "Giriş yap",
+            "validation": {
+                "nameRequired": "İsim girilmesi zorunludur",
+                "surnameRequired": "Soyisim girilmesi zorunludur",
+                "phoneRequired": "Telefon girilmesi zorunludur",
+                "emailRequired": "Eposta girilmesi zorunludur",
+                "emailInvalid": "Email formatı hatalı.",
+                "passwordRequired": "Şifre girilmesi zorunludur",
+                "passwordMin": "Şifre en az 6 karakter olmalı.",
+                "passwordsNotMatch": "Şifreler birbiri ile eşleşmiyor."
+            }
+        },
+        "language": {
+            "tr": "Türkçe",
+            "en": "English"
+        }
     },
-     "registerPage": {
-      "title": "Kayıt Ol",
-      "name": "İsim",
-      "surname": "Soyisim",
-      "phone": "Telefon",
-      "email": "Eposta",
-      "password": "Şifre",
-      "passwordRepeat": "Şifre tekrar",
-      "cta": "Hesap oluştur",
-      "creating": "Hesap Oluşturuluyor...",
-      "haveAccount": "Zaten hesabın var mı ?",
-      "goLogin": "Giriş yap",
+    "user": {
+        "home": {
+            "pageTitle": "Ana Sayfa",
+            "pageDesc": "Hızlıca hizmet seçip randevunu oluştur.",
+            "headerTitle":"Hizmetlerimiz",
+            "headerDesc":"Öne çıkan hizmetler",
+            "upcomingBook":"Yaklaşan Randevu",
+            "upcomingBookDesc":"Henüz randevun yok. Yukarıdan bir hizmet seçerek başlayabilirsin."
 
-      "validation": {
-        "nameRequired": "İsim girilmesi zorunludur",
-        "surnameRequired": "Soyisim girilmesi zorunludur",
-        "phoneRequired": "Telefon girilmesi zorunludur",
-        "emailRequired": "Eposta girilmesi zorunludur",
-        "emailInvalid": "Email formatı hatalı.",
-        "passwordRequired": "Şifre girilmesi zorunludur",
-        "passwordMin": "Şifre en az 6 karakter olmalı.",
-        "passwordsNotMatch": "Şifreler birbiri ile eşleşmiyor."
-      }
+        },
+        "profile": {
+            "title": "Profil",
+            "edit": "Profili Düzenle"
+        }
     },
-
-    "language": {
-      "tr": "Türkçe",
-      "en": "English"
+    "common":{
+        "home":"Anasayfa",
+        "appointment":"Randevu al",
+        "book":"Randevularım",
+        "settings":"Ayarlar",
+        "loading":"Yükleniyor..."
     }
-  }
-  
 }
-

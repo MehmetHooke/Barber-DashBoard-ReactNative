@@ -1,51 +1,68 @@
 {
-  "auth": {
-    "welcome": "Welcome",
-    "emailPlaceholder": "Email",
-    "passwordPlaceholder": "Password",
-    "login": "Sign in",
-    "loggingIn": "Signing in...",
-    "noAccount": "Don't have an account?",
-    "register": "Sign up",
-
-    "errorTitle": "Error",
-    "loginFailed": "Login failed",
-    "unknownError": "Unknown error",
-
-    "validation": {
-      "emailRequired": "Email is required.",
-      "emailInvalid": "Invalid email format.",
-      "passwordRequired": "Password is required.",
-      "passwordMin": "Password must be at least 6 characters."
+    "auth": {
+        "welcome": "Welcome",
+        "emailPlaceholder": "Email",
+        "passwordPlaceholder": "Password",
+        "login": "Sign in",
+        "loggingIn": "Signing in...",
+        "noAccount": "Don't have an account?",
+        "register": "Sign up",
+        "errorTitle": "Error",
+        "loginFailed": "Login failed",
+        "unknownError": "Unknown error",
+        "validation": {
+            "emailRequired": "Email is required.",
+            "emailInvalid": "Invalid email format.",
+            "passwordRequired": "Password is required.",
+            "passwordMin": "Password must be at least 6 characters."
+        },
+        "registerPage": {
+            "title": "Sign up",
+            "name": "First name",
+            "surname": "Last name",
+            "phone": "Phone",
+            "email": "Email",
+            "password": "Password",
+            "passwordRepeat": "Password (again)",
+            "cta": "Create account",
+            "creating": "Creating account...",
+            "haveAccount": "Already have an account?",
+            "goLogin": "Sign in",
+            "validation": {
+                "nameRequired": "First name is required.",
+                "surnameRequired": "Last name is required.",
+                "phoneRequired": "Phone is required.",
+                "emailRequired": "Email is required.",
+                "emailInvalid": "Invalid email format.",
+                "passwordRequired": "Password is required.",
+                "passwordMin": "Password must be at least 6 characters.",
+                "passwordsNotMatch": "Passwords do not match."
+            }
+        },
+        "language": {
+            "tr": "Türkçe",
+            "en": "English"
+        }
     },
-     "registerPage": {
-      "title": "Sign up",
-      "name": "First name",
-      "surname": "Last name",
-      "phone": "Phone",
-      "email": "Email",
-      "password": "Password",
-      "passwordRepeat": "Password (again)",
-      "cta": "Create account",
-      "creating": "Creating account...",
-      "haveAccount": "Already have an account?",
-      "goLogin": "Sign in",
-
-      "validation": {
-        "nameRequired": "First name is required.",
-        "surnameRequired": "Last name is required.",
-        "phoneRequired": "Phone is required.",
-        "emailRequired": "Email is required.",
-        "emailInvalid": "Invalid email format.",
-        "passwordRequired": "Password is required.",
-        "passwordMin": "Password must be at least 6 characters.",
-        "passwordsNotMatch": "Passwords do not match."
-      }
+    "user": {
+        "home": {
+            "pageTitle": "Home Page",
+            "pageDesc": "Quickly select a service and make an appointment.",
+            "headerTitle": "Services",
+            "headerDesc": "Popular Services",
+            "upcomingBook":"Upcoming Appointment",
+            "upcomingBookDesc":"You don't have an appointment yet. You can start by choosing a service above."
+        },
+        "profile": {
+            "title": "Profil",
+            "edit": "Profili Düzenle"
+        }
     },
-
-    "language": {
-      "tr": "Türkçe",
-      "en": "English"
+    "common": {
+        "home": "Home",
+        "appointment": "appointment",
+        "book": "My Books",
+        "settings": "Setings",
+        "loading":"Loading..."
     }
-  }
 }

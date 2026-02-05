@@ -30,6 +30,7 @@ type Props = {
   headerSubtitle?: string;
 };
 
+
 export default function UserHeroCarousel({
   slides,
   height = 140,

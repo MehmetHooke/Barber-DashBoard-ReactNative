@@ -24,6 +24,7 @@ import {
 } from "@/src/services/services.service";
 import { AppointmentStatus } from "@/src/types/appointments";
 import { getAuth } from "firebase/auth";
+import { useTranslation } from "react-i18next";
 
 export default function UserHome() {
   const { effectiveTheme } = useAppTheme();
@@ -33,7 +34,7 @@ export default function UserHome() {
     light: require("@/src/assets/images/theme/lightBG.png"),
     dark: require("@/src/assets/images/theme/darkBG.png"),
   } as const;
-
+  const { t } = useTranslation();
   const [services, setServices] = useState<ServiceDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [upcoming, setUpcoming] = useState<any | null>(null);
@@ -153,7 +154,7 @@ export default function UserHome() {
     if (upcomingLoading) {
       return (
         <Text className="text-sm mt-1" style={{ color: c.textMuted }}>
-          Yükleniyor...
+          {t("common.loading")}
         </Text>
       );
     }
@@ -161,7 +162,7 @@ export default function UserHome() {
     if (!upcoming) {
       return (
         <Text className="text-sm mt-1" style={{ color: c.textMuted }}>
-          Henüz randevun yok. Yukarıdan bir hizmet seçerek başlayabilirsin.
+          {t("user.home.upcomingBookDesc")}
         </Text>
       );
     }
@@ -242,10 +243,10 @@ export default function UserHome() {
       <View className="flex-1 pt-10">
         <View className="px-4 pt-5 pb-2">
           <Text className="text-2xl font-bold" style={{ color: c.text }}>
-            Anasayfa
+            { t("user.home.pageTitle")}
           </Text>
           <Text className="mt-1" style={{ color: c.textMuted }}>
-            Hızlıca hizmet seçip randevunu oluştur.
+             { t("user.home.pageDesc")}
           </Text>
         </View>
 
@@ -274,7 +275,7 @@ export default function UserHome() {
             </View>
           ) : slides.length ? (
             <View className="mt-4">
-              <UserHeroCarousel slides={slides} height={240} />
+              <UserHeroCarousel headerSubtitle={t("user.home.headerDesc")} headerTitle={t("user.home.headerTitle")} slides={slides} height={240} />
             </View>
           ) : null}
 
@@ -291,7 +292,7 @@ export default function UserHome() {
                     className="text-base font-semibold"
                     style={{ color: c.text }}
                   >
-                    Yaklaşan Randevu
+                    {t("user.home.upcomingBook")}
                   </Text>
                 </View>
 
