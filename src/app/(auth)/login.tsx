@@ -2,14 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import i18n from "@/src/i18n/i18n";
 import { loginWithEmail } from "@/src/services/auth.service";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, ImageBackground, View } from "react-native";
+import { Alert, ImageBackground } from "react-native";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -58,30 +57,7 @@ export default function Login() {
         style={{ flex: 1 }}
       >
         <VStack className="flex-1 justify-center px-6">
-          {/* ✅ Dil Seçimi */}
-          
-            <Text className="flex">Dil</Text>
-        
-          <View className="flex-row justify-end gap-2 mb-4">
-          
-            <Button
-              variant={i18n.language === "tr" ? "solid" : "outline"}
-              className="rounded-xl border-white/30"
-              onPress={() => i18n.changeLanguage("tr")}
-              isDisabled={loading}
-            >
-              <Text className="text-white">{t("auth.language.tr")}</Text>
-            </Button>
 
-            <Button
-              variant={i18n.language === "en" ? "solid" : "outline"}
-              className="rounded-2xl mb-10 border-white/30"
-              onPress={() => i18n.changeLanguage("en")}
-              isDisabled={loading}
-            >
-              <Text className="text-white">{t("auth.language.en")}</Text>
-            </Button>
-          </View>
           <Text className="text-white text-3xl font-bold mb-6">
             {t("auth.welcome")}
           </Text>
